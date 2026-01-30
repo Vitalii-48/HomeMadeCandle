@@ -10,6 +10,7 @@
 2. Встановити залежності:
    - pip install -r requirements.txt
 3. Налаштувати .env:
+   - створи в кореневому каталозі файл .env
    - скопіюй .env.example у .env і задай SECRET_KEY, DATABASE_URL за потреби
 4. Ініціалізувати БД і міграції:
    - flask db init
@@ -42,15 +43,8 @@
 - Адмінка: логін, товари ( кольори, фото ), замовлення
 - Композиції як контент (CRUD в адмінці)
 
-## Деплой на Render (кроки)
-1. Репозиторій на GitHub, файли: requirements.txt, Procfile.
-2. Створити новий Web Service у Render:
-   - Build Command: pip install -r requirements.txt
-   - Start Command: gunicorn app:app
-3. Environment:
-   - SECRET_KEY, DATABASE_URL (PostgreSQL або SQLite для dev)
-4. Фото:
-   - Локально зберігаються у static/img/uploads. Для прод — рекомендується S3/Cloudinary.
+## Авторство
+Проект створений за допомогою штучного інтелекту (Microsoft Copilot).
 
 ## Примітки
 - Міграції створюються автоматично командою `flask db migrate` після змін у models.py.
