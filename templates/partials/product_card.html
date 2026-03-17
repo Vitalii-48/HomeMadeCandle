@@ -8,7 +8,9 @@
     {% endif %}
     <div class="card-body">
       <h5 class="card-title">{{ product.name }}</h5>
-      <p class="card-text text-muted">{{ product.description[:100] }}{% if product.description and product.description|length > 100 %}...{% endif %}</p>
+      <p class="card-text text-muted">
+        {{ product.description[:100] }}{% if product.description and product.description|length > 100 %}...{% endif %}
+      </p>
       <div class="mb-2">Ціна від: {{ product.price|int }} грн.</div>
       <a href="{{ url_for('public.product_detail', product_id=product.id) }}" class="btn btn-primary">Детальніше</a>
     </div>

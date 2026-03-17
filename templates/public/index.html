@@ -3,27 +3,52 @@
 {% block content %}
 <div class="container">
   <div class="mb-4">
-    <h1 class="h3">Формові свічки — тепло і стиль</h1>
+    <h1 class="display-5">Формові свічки — тепло і стиль</h1>
     <p class="text-muted">Оригінальні свічки з високоякісного воску. Обирай колір, формуй композиції — і даруй тепло.</p>
     <a href="{{ url_for('public.catalog') }}" class="btn btn-primary">Перейти до каталогу</a>
   </div>
+
   <h2 class="h5 mb-3">Композиції</h2>
-  <div class="row">
-    {% for comp in compositions %}
-      <div class="col-12 col-md-6 col-lg-4 mb-4">
-        <div class="card h-100">
-          {% if comp.image %}
-          <img src="{{ url_for('static', filename='img/uploads/' ~ comp.image) }}" class="card-img-top img-fluid" alt="{{ comp.title }}">
-          {% endif %}
-          <div class="card-body">
-            <h5 class="card-title">{{ comp.title }}</h5>
-            <p class="card-text">{{ comp.description }}</p>
+
+  {% if compositions %}
+  <div id="compositionsCarousel"
+       class="carousel slide"
+       data-bs-ride="carousel"
+       data-bs-interval="3000"
+       data-bs-pause="hover">
+    <div class="carousel-inner">
+      {% for comp in compositions %}
+        <div class="carousel-item {% if loop.first %}active{% endif %}">
+          <div class="card h-100">
+            {% if comp.image %}
+              <img src="{{ url_for('static', filename='img/uploads/' ~ comp.image) }}"
+                   class="card-img-top img-fluid" alt="{{ comp.title }}"
+                   style="object-fit: cover; max-height: 400px;">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ comp.title }}</h5>
+              <p class="card-text">{{ comp.description }}</p>
+            </div>
           </div>
         </div>
-      </div>
-    {% else %}
-      <p class="text-muted">Поки що немає прикладів композицій.</p>
-    {% endfor %}
+      {% endfor %}
+    </div>
+
+    {% if compositions|length > 1 %}
+    <button class="carousel-control-prev" type="button" data-bs-target="#compositionsCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#compositionsCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+    {% endif %}
   </div>
+
+  <div class="text-center mt-3">
+    <a href="{{ url_for('public.compositions') }}" class="btn btn-outline-primary">Переглянути всі композиції</a>
+  </div>
+  {% else %}
+    <p class="text-muted">Поки що немає прикладів композицій.</p>
+  {% endif %}
 </div>
 {% endblock %}
