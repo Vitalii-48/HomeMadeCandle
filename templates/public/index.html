@@ -1,14 +1,45 @@
 <!-- templates/public/index.html -->
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
+<section class="position-relative text-center hero my-5">
+  <div class="container-hero position-relative p-5">
+    <img src="{{ url_for('static', filename='img/hero-candle.jpg') }}"
+         alt="Shaped Candle"
+         class="img-fluid w-100 rounded shadow">
+
+    <!-- Текст поверх картинки -->
+    <div class="position-absolute top-50 start-50 translate-middle text-white">
+      <h1 class="display-3 fw-bold">Shaped Candle</h1>
+      <p class="lead mb-4">Нова колекція формових свічок</p>
+      <a href="{{ url_for('public.catalog') }}" class="btn btn-lg btn-warning fw-semibold">
+        Shop Now
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="container my-5">
   <div class="mb-4">
-    <h1 class="display-5">Формові свічки — тепло і стиль</h1>
-    <p class="text-muted">Оригінальні свічки з високоякісного воску. Обирай колір, формуй композиції — і даруй тепло.</p>
+    <h2 class="display-5">Формові свічки — тепло і стиль</h2>
+    <p>
+        Наші формові свічки створені з високоякісного воску та поєднують естетику й практичність.
+        Вони не лише дарують затишне світло, а й стають стильним акцентом у будь‑якому інтер’єрі.
+      </p>
+      <ul class="text-start mt-3">
+        <li>Оригінальні форми — від класичних до креативних дизайнерських рішень.</li>
+        <li>Великий вибір кольорів — підбери відтінок під настрій чи композицію.</li>
+        <li>Ручна робота — кожна свічка має свою унікальність.</li>
+        <li>Ідеальний подарунок — для дому, свят чи особливих моментів.</li>
+      </ul>
+      <p class="mt-3">
+        ✨ Обирай форму, комбінуй кольори та створюй власні композиції — подаруй тепло й атмосферу близьким.
+      </p>
     <a href="{{ url_for('public.catalog') }}" class="btn btn-primary">Перейти до каталогу</a>
   </div>
+</section>
 
-  <h2 class="h5 mb-3">Композиції</h2>
+<section class="container position-relative text-center my-5">
+  <h2 class="display-5 mb-3">Композиції</h2>
 
   {% if compositions %}
   <div id="compositionsCarousel"
@@ -50,5 +81,56 @@
   {% else %}
     <p class="text-muted">Поки що немає прикладів композицій.</p>
   {% endif %}
-</div>
+</section>
+
+<footer id="footer" class="bg-light text-dark py-5">
+  <div class="container">
+    <div class="row">
+
+      <!-- Лого та короткий опис -->
+      <div class="col-lg-3 col-sm-6 mb-4">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="mb-3 img-fluid w-50">
+        <p>Handmade candles with love</p>
+      </div>
+
+      <!-- Швидкі лінки -->
+      <div class="col-lg-3 col-sm-6 mb-4">
+        <h5 class="fw-bold mb-3">Швидкі посилання</h5>
+        <ul class="list-unstyled">
+          <li><a href="{{ url_for('public.index') }}" class="text-dark">Головна</a></li>
+          <li><a href="{{ url_for('public.catalog') }}" class="text-dark">Каталог</a></li>
+          <li><a href="{{ url_for('public.compositions') }}" class="text-dark">Композиції</a></li>
+          <li><a href="{{ url_for('shop.cart') }}" class="text-dark">Кошик</a></li>
+        </ul>
+      </div>
+
+      <!-- Способи доставки -->
+      <div class="col-lg-3 col-sm-6 mb-4">
+        <h5 class="fw-bold mb-3">Доставка</h5>
+        <ul class="list-unstyled">
+          <li><i class="bi bi-truck me-3"></i> Нова Пошта</li>
+          <li><i class="bi bi-box-seam me-3"></i> Укрпошта</li>
+          <li><i class="bi bi-house-door me-3"></i> Кур’єр (Київ)</li>
+        </ul>
+      </div>
+
+      <!-- Соцмережі -->
+      <div class="col-lg-3 col-sm-6 mb-4">
+        <h5 class="fw-bold mb-3">Слідкуйте за нами</h5>
+        <div class="d-flex gap-3">
+          <a href="https://facebook.com" target="_blank" class="text-secondary">
+            <i class="bi bi-facebook fs-4"></i>
+          </a>
+          <a href="https://instagram.com" target="_blank" class="text-secondary">
+            <i class="bi bi-instagram fs-4"></i>
+          </a>
+          <a href="https://t.me" target="_blank" class="text-secondary">
+            <i class="bi bi-telegram fs-4"></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</footer>
 {% endblock %}

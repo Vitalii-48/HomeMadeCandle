@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container py-4">
-  <h1 class="h4 mb-3">Кошик</h1>
+  <h1 class="h4 mb-3 display-5">Кошик</h1>
   {% if items %}
     <div class="list-group mb-3">
       {% for it in items %}
@@ -19,20 +19,20 @@
                   Колір: <span class="badge me-1" style="background:{{ it.color.color_hex }};">&nbsp;&nbsp;</span> {{ it.color.color_name }}
                 </div>
               {% endif %}
-              <div class="small">Ціна: {{ "%.2f"|format(it.unit_price) }}</div>
+              <div class="small">Ціна: {{ it.unit_price|int }} грн.</div>
             </div>
           </div>
           <div class="d-flex align-items-center gap-2">
             <input type="number" min="1" value="{{ it.quantity }}" class="form-control"
                    style="width:90px" data-index="{{ it.index }}" data-action="qty-update">
-            <div class="text-nowrap">Сума: {{ "%.2f"|format(it.subtotal) }}</div>
+            <div class="text-nowrap">Сума: {{ it.subtotal|int }} грн.</div>
             <button class="btn btn-outline-danger btn-sm" data-index="{{ it.index }}" data-action="remove">×</button>
           </div>
         </div>
       {% endfor %}
     </div>
     <div class="d-flex justify-content-between align-items-center">
-      <div class="fw-semibold">Всього: {{ "%.2f"|format(total) }}</div>
+      <div class="fw-semibold">Всього: {{ total|int }} грн.</div>
       <a class="btn btn-primary" href="{{ url_for('shop.checkout') }}">Оформити замовлення</a>
     </div>
   {% else %}

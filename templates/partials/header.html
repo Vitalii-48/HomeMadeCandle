@@ -1,18 +1,28 @@
 <!-- templates/partials/header.html -->
-<nav class="navbar navbar-expand-md navbar-light bg-light">
+<nav class="navbar navbar-expand-md navbar-light bg-light  shadow-sm">
   <div class="container">
-    {% if request.blueprint == "public" %}
+    {% if request.blueprint in ["public", "shop"] %}
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavPublic">
         <span class="navbar-toggler-icon"></span>
       </button>
       <a class="navbar-brand" href="{{ url_for('public.index') }}">Shop HomeMadeCandle</a>
       <div id="mainNavPublic" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('public.index') }}">Головна</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('public.catalog') }}">Каталог</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('public.compositions') }}">Композиції</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('public.faq') }}">FAQ</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('shop.cart') }}">Кошик</a></li>
+          <li class="nav-item"><a class="nav-link
+            {% if request.endpoint == 'public.index' %}active fw-bold{% endif %}"
+            href="{{ url_for('public.index') }}">Головна</a></li>
+          <li class="nav-item"><a class="nav-link
+            {% if request.endpoint == 'public.catalog' %}active fw-bold{% endif %}"
+            href="{{ url_for('public.catalog') }}">Каталог</a></li>
+          <li class="nav-item"><a class="nav-link
+            {% if request.endpoint == 'public.compositions' %}active fw-bold{% endif %}"
+            href="{{ url_for('public.compositions') }}">Композиції</a></li>
+          <li class="nav-item"><a class="nav-link
+            {% if request.endpoint == 'public.faq' %}active fw-bold{% endif %}"
+            href="{{ url_for('public.faq') }}">FAQ</a></li>
+          <li class="nav-item"><a class="nav-link
+            {% if request.endpoint == 'shop.cart' %}active fw-bold{% endif %}"
+            href="{{ url_for('shop.cart') }}">Кошик</a></li>
           {% if request.endpoint == "public.index" %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.login') }}">Адмін панель</a></li>
           {% endif %}

@@ -1,6 +1,7 @@
 <!-- templates/partials/product_card.html -->
+
 <div class="col-12 col-md-6 col-lg-4 mb-4">
-  <div class="card h-100">
+  <div class="card h-100 shadow-sm">
     {% set cover = product.images[0] if product.images else None %}
     {% if cover %}
       <img src="{{ url_for('static', filename='img/uploads/' ~ (cover.preview_filename or cover.filename)) }}"

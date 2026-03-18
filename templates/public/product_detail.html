@@ -1,4 +1,5 @@
 <!-- templates/public/product_detail.html -->
+
 {% extends "base.html" %}
 {% block content %}
 <div class="container py-4">
@@ -24,14 +25,17 @@
     </div>
 
     <div class="col-12 col-md-6">
-      <h1 class="h4">{{ product.name }}</h1>
+      <h1 class="h4 mb-3">{{ product.name }}</h1>
       <p class="text-muted">{{ product.description }}</p>
 
       <div class="mb-2 small text-muted">
-        Віск: {{ product.wax_type }} • Категорія: {{ product.category }}
+        Віск: {{ product.wax_type }}
       </div>
       <div class="mb-2 small text-muted">
-        Довжина: {{ product.height|int }} мм • Ширина: {{ product.width|int }} мм • Висота: {{ product.depth|int }} мм
+        Категорія: {{ product.category }}
+      </div>
+      <div class="mb-2 small text-muted">
+        Розміри: д ({{ product.height|int }} мм) X ш ({{ product.width|int }} мм) X в ({{ product.depth|int }} мм)
       </div>
       <div class="mb-2 small text-muted">
         Вага: {{ product.weight|int }} г
@@ -57,7 +61,7 @@
 
       <div class="mb-3">
         <label class="form-label">Кількість</label>
-        <div class="input-group" style="max-width: 200px;">
+        <div class="input-group" style="max-width: 120px;">
           <button class="btn btn-outline-secondary" type="button" id="qty-minus">−</button>
           <input type="number" class="form-control text-center" id="qty" value="1" min="1">
           <button class="btn btn-outline-secondary" type="button" id="qty-plus">+</button>
@@ -65,7 +69,7 @@
       </div>
 
       <div class="mb-3">
-        <div id="price-display" class="fw-semibold">Ціна: {{ product.price|int }} грн.</div>
+        <div id="price-display" class="fw-semibold">{{ product.price|int }}</div>
       </div>
 
       <button class="btn btn-primary" id="add-to-cart">Додати в кошик</button>
@@ -88,7 +92,7 @@
     const found = color.find(c => c.id == selectedId);
     const modifier = found ? (found.price_modifier || 0) : 0;
     const price = (priceBase * (1 + modifier));
-    priceEl.textContent = `Ціна: ${price}`;
+    priceEl.textContent = `Ціна: ${price} грн.`;
   }
   colorInputs.forEach(el => el.addEventListener('change', updatePrice));
   updatePrice();
