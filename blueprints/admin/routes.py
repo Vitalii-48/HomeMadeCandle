@@ -196,6 +196,7 @@ def composition_new():
                 filename, preview = save_image(file)
             except Exception as e:
                 flash(f"Помилка завантаження: {e}")
+        price = request.form.get("price", 0)
         comp = Composition(title=title, description=description, image=filename, is_active=bool(request.form.get("is_active")))
         db.session.add(comp); db.session.commit()
         return redirect(url_for("admin.composition_list"))
@@ -209,6 +210,7 @@ def composition_edit(comp_id):
         comp.title = request.form.get("title", comp.title)
         comp.description = request.form.get("description", comp.description)
         comp.is_active = bool(request.form.get("is_active"))
+        comp.price = request.form.get("price", comp.price)
         file = request.files.get("image")
         if file and file.filename:
             try:

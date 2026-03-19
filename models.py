@@ -27,7 +27,7 @@ class Color(db.Model):
     color_name = db.Column(db.String(64), nullable=False)
     color_hex = db.Column(db.String(7), nullable=False)  # "#FFFFFF"
     is_default = db.Column(db.Boolean, default=False)
-    price_modifier = db.Column(db.Float, default=0.0)     # 0.1 = +10% від базової ціни
+    price_modifier = db.Column(db.Integer, default=0)     # 0.1 = +10% від базової ціни
 
     def to_dict(self):
         return {
@@ -64,13 +64,14 @@ class OrderItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
     color_id = db.Column(db.Integer, db.ForeignKey("color.id"), nullable=True)
     quantity = db.Column(db.Integer, default=1)
-    unit_price = db.Column(db.Float, default=0.0)
+    unit_price = db.Column(db.Integer, default=0)
 
 class Composition(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text)
     image = db.Column(db.String(255))   # шлях до фото (filename)
+    price = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

@@ -8,7 +8,8 @@ from blueprints.public import bp
 def index():
     # Вибираємо всі активні композиції з БД, сортуємо за датою створення (новіші першими)
     compositions = Composition.query.filter_by(is_active=True).order_by(Composition.created_at.desc()).all()
-    return render_template("public/index.html", compositions=compositions)
+    products = Product.query.filter_by(is_active=True).all()
+    return render_template("public/index.html", products=products, compositions=compositions)
 
 # Сторінка зі списком композицій
 @bp.route("/compositions")
