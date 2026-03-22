@@ -12,7 +12,7 @@
       <p class="card-text text-muted">
         {{ product.description[:100] }}{% if product.description and product.description|length > 100 %}...{% endif %}
       </p>
-      <div class="mb-2 pt-2 border-top">Ціна від: {{ product.price|int }} грн.</div>
+      <div class="mb-2 pt-2 border-top price-display">Ціна від: {{ product.price|int }} грн.</div>
       {% set colors = product.colors_list %}
       {% include "partials/color_picker.html" %}
 
@@ -21,14 +21,14 @@
         <a href="{{ url_for('public.product_detail', product_id=product.id) }}"
            class="btn btn-sm btn-primary">Детальніше</a>
         <button type="button" class="btn btn-sm btn-success"
-                onclick="addToCart({{ product.id }})">Додати в кошик</button>
+                onclick="addToCart_{{ product.id }}({{ product.id }})">Додати в кошик</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  function addToCart(id) {
+  function addToCart_{{ product.id }}(id) {
   const selected = document.querySelector(`input[name="color-${id}"]:checked`);
   const colorId = selected ? parseInt(selected.value) : null;
 
@@ -44,4 +44,19 @@
     }
   });
 }
+
+// Оновлення ціни при виборі кольору
+document.querySelectorAll('input[name="color-{{ product.id }}"]').forEach(el => {
+  el.addEventListener('change', () => {
+    const colorData = JSON.parse(
+      el.closest('[data-colors]').dataset.colors
+    );
+    const found = colorData.find(c => c.id == el.value);
+    const modifier = found ? (found.price_modifier || 0) : 0;
+    const base = {{ product.price|int }};
+    const price = Math.round(base * (1 + modifier));
+    // знаходимо елемент ціни в цій же картці
+    el.closest('.card-body').querySelector('.price-display').textContent = `Ціна: ${price} грн.`;
+  });
+});
 </script>
