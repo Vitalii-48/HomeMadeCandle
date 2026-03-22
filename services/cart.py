@@ -13,16 +13,31 @@ class CartService:
         session[cls.KEY] = cart
 
     @classmethod
-    def add(cls, product_id, color_id, quantity, unit_price):
+    def add_product(cls, product_id, color_id, quantity, unit_price):
         cart = cls.get()
         for item in cart:
-            if item["product_id"] == product_id and item.get("color_id") == color_id:
+            if item.get("product_id") == product_id and item.get("color_id") == color_id:
                 item["quantity"] += quantity
                 break
         else:
             cart.append({
                 "product_id": product_id,
                 "color_id": color_id,
+                "quantity": quantity,
+                "unit_price": unit_price
+            })
+        cls.set(cart)
+
+    @classmethod
+    def add_composition(cls, composition_id, quantity, unit_price):
+        cart = cls.get()
+        for item in cart:
+            if item.get("composition_id") == composition_id:
+                item["quantity"] += quantity
+                break
+        else:
+            cart.append({
+                "composition_id": composition_id,
                 "quantity": quantity,
                 "unit_price": unit_price
             })

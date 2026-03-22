@@ -1,0 +1,19 @@
+<!-- templates/partials/color_picker.html -->
+
+<div class="d-flex gap-3 flex-wrap" data-colors='{{ (colors or [])|tojson|safe }}'>
+  {% for c in colors %}
+    <input type="radio"
+           class="btn-check"
+           name="color-{{ product.id }}"
+           id="color-{{ product.id }}-{{ c.id }}"
+           value="{{ c.id }}"
+           {% if loop.first %}checked{% endif %}>
+
+    <label class="d-flex flex-column align-items-center color-swatch" for="color-{{ product.id }}-{{ c.id }}">
+      <!-- Кружечок з кольором -->
+      <span class="swatch-circle"
+            style="background-color: {{ c.color_hex }};"></span>
+      <small class="mt-1 text-muted">{{ c.color_name }}</small>
+    </label>
+  {% endfor %}
+</div>

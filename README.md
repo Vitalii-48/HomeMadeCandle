@@ -28,7 +28,7 @@
 ## Структура
 - app.py (app factory)
 - extensions.py (db, migrate, login_manager)
-- models.py (Product, Color, ProductImage, Order, OrderItem, User, Composition)
+- models.py (Product, Color, ProductImage, Order, OrderItem, User, Composition, CompositionImage, ColorPalette)
 - services/cart.py (сесійний кошик)
 - services/images.py (Pillow: upload + preview 200x200)
 - blueprints/public|shop|admin (маршрути й шаблони)
@@ -42,6 +42,9 @@
 - Оформлення замовлення (без email, з телефоном і методом зв’язку)
 - Адмінка: логін, товари ( кольори, фото ), замовлення
 - Композиції як контент (CRUD в адмінці)
+- Палітра кольорів (глобальна, копіюється на новий товар)
+- Drag & drop завантаження фото товарів
+- Сортування фото перетягуванням
 
 ## Авторство
 Проект створений за допомогою штучного інтелекту (Microsoft Copilot).
@@ -50,3 +53,5 @@
 - Міграції створюються автоматично командою `flask db migrate` після змін у models.py.
 - Щоб уникнути циклічних імпортів — не імпортуй app у models; імпортуй лише `db` з extensions.py.
 - За потреби додай валідацію телефонів та адрес у checkout.
+- При створенні нового товару кольори копіюються з глобальної палітри (/admin/palette).
+- Фото зберігаються в static/img/uploads; прев'ю 200x200 генерується автоматично через Pillow.

@@ -61,8 +61,9 @@ class Order(db.Model):
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey("order.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=True)
     color_id = db.Column(db.Integer, db.ForeignKey("color.id"), nullable=True)
+    composition_id = db.Column(db.Integer, db.ForeignKey("composition.id"), nullable=True)
     quantity = db.Column(db.Integer, default=1)
     unit_price = db.Column(db.Integer, default=0)
 
@@ -74,9 +75,41 @@ class Composition(db.Model):
     price = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    images = db.relationship("CompositionImage", backref="composition",
+                             order_by="CompositionImage.sort_order",
+                             cascade="all, delete-orphan")
+
+
+class CompositionImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    composition_id = db.Column(db.Integer, db.ForeignKey("composition.id"), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)        # оригінал
+    preview_filename = db.Column(db.String(255))                # прев’ю 200x200
+    alt_text = db.Column(db.String(120))
+    sort_order = db.Column(db.Integer, default=0)
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+
+
+class ColorPalette(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    color_name = db.Column(db.String(64), nullable=False)
+    color_hex = db.Column(db.String(7), nullable=False)
+    is_default = db.Column(db.Boolean, default=False)
+    price_modifier = db.Column(db.Float, default=0.0)
+    sort_order = db.Column(db.Integer, default=0)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "color_name": self.color_name,
+            "color_hex": self.color_hex,
+            "is_default": self.is_default,
+            "price_modifier": self.price_modifier,
+        }
+

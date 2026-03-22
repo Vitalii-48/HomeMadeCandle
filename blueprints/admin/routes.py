@@ -1,10 +1,10 @@
 # blueprints/admin/routes.py
 import os
-from flask import render_template, request, redirect, url_for, flash, current_app
+from flask import render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, login_user, logout_user
 from werkzeug.security import check_password_hash
 from extensions import db, login_manager
-from models import Product, Color, ProductImage, Order, User, Composition
+from models import Product, Color, ProductImage, Order, User, Composition, CompositionImage, ColorPalette
 from services.images import save_image
 from . import bp
 
@@ -53,12 +53,11 @@ def product_edit(product_id=None):
     product = Product.query.get(product_id) if product_id else None
 
     if request.method == "POST":
-        if not product:
+        is_new = product is None
+        if is_new:
             product = Product()
             db.session.add(product)
 
-
-        # 1. Основні дані продукту
         product.sku = request.form.get("sku")
         product.name = request.form.get("name")
         product.description = request.form.get("description")
@@ -71,46 +70,63 @@ def product_edit(product_id=None):
         product.weight = int(request.form.get("weight") or 0)
         product.is_active = "is_active" in request.form
 
-        db.session.flush() # Щоб отримати ID нового продукту
+        db.session.flush()
 
-        # 2. Обробка кольорів (списки з форми)
-        c_ids = request.form.getlist("color_id[]")
-        c_names = request.form.getlist("color_name[]")
-        c_hexes = request.form.getlist("color_hex[]")
-
-        for c_id, name, hex_val in zip(c_ids, c_names, c_hexes):
-            if not name.strip(): continue # пропускаємо порожні імена
-
-            if c_id == "new":
-                new_color = Color(product_id=product.id, color_name=name, color_hex=hex_val)
-                db.session.add(new_color)
-            else:
-                existing_color = Color.query.get(int(c_id))
-                if existing_color:
-                    existing_color.color_name = name
-                    existing_color.color_hex = hex_val
-
-        # 3. Обробка зображень (множинне завантаження)
-        files = request.files.getlist("image_file[]")
-        print("FILES:", files)
-
-        for file in files:
-            if file and file.filename:
-                try:
-                    filename, preview = save_image(file)
-                    img = ProductImage(product_id=product.id, filename=filename, preview_filename=preview)
-                    db.session.add(img)
-                except Exception as e:
-                    flash(f"Помилка завантаження фото: {e}")
+        # копіюємо палітру тільки для нового товару
+        if is_new:
+            palette = ColorPalette.query.order_by(ColorPalette.sort_order).all()
+            for p in palette:
+                db.session.add(Color(
+                    product_id=product.id,
+                    color_name=p.color_name,
+                    color_hex=p.color_hex,
+                    is_default=p.is_default,
+                    price_modifier=p.price_modifier,
+                ))
 
         db.session.commit()
         flash("Дані збережено!")
         return redirect(url_for("admin.product_edit", product_id=product.id))
 
-    # Для відображення сторінки (GET)
-    colors = Color.query.filter_by(product_id=product.id).all() if product else []
-    images = ProductImage.query.filter_by(product_id=product.id).all() if product else []
+    if product:
+        colors = Color.query.filter_by(product_id=product.id).all()
+    else:
+        # для нового товару показуємо палітру як дефолтні кольори
+        palette = ColorPalette.query.order_by(ColorPalette.sort_order).all()
+        colors = [Color(color_name=p.color_name, color_hex=p.color_hex) for p in palette]
+    images = ProductImage.query.filter_by(product_id=product.id).order_by(ProductImage.sort_order).all() if product else []
     return render_template("admin/product_form.html", product=product, colors=colors, images=images)
+
+
+@bp.route("/products/<int:product_id>/images/add", methods=["POST"])
+@login_required
+def image_add(product_id):
+    files = request.files.getlist("images[]")
+    # визначаємо поточний максимальний sort_order
+    max_order = db.session.query(
+        db.func.max(ProductImage.sort_order)
+    ).filter_by(product_id=product_id).scalar() or -1
+
+    saved = 0
+    for i, file in enumerate(files):
+        if file and file.filename:
+            try:
+                filename, preview = save_image(file)
+                db.session.add(ProductImage(
+                    product_id=product_id,
+                    filename=filename,
+                    preview_filename=preview,
+                    sort_order=max_order + 1 + i  # перше = наступний після існуючих
+                ))
+                saved += 1
+            except Exception as e:
+                flash(f"Помилка завантаження {file.filename}: {e}")
+
+    if saved:
+        db.session.commit()
+        flash(f"Додано {saved} фото.")
+    return redirect(url_for("admin.product_edit", product_id=product_id))
+
 
 # API для швидкого видалення елементів (викликається через JS)
 @bp.route("/colors/<int:color_id>/delete", methods=["POST"])
@@ -191,14 +207,26 @@ def composition_new():
         description = request.form.get("description")
         file = request.files.get("image")
         filename = None
+        comp = Composition(
+            title=title,
+            description=description,
+            image=filename,
+            is_active=bool(request.form.get("is_active")),
+            price=int(request.form.get("price", 0)))
+        db.session.add(comp)
+        db.session.flush()
         if file and file.filename:
             try:
                 filename, preview = save_image(file)
+                img = CompositionImage(composition_id=comp.id,
+                                       filename=filename,
+                                       preview_filename=preview)
+                db.session.add(img)
+                comp.image = filename
             except Exception as e:
                 flash(f"Помилка завантаження: {e}")
-        price = request.form.get("price", 0)
-        comp = Composition(title=title, description=description, image=filename, is_active=bool(request.form.get("is_active")))
-        db.session.add(comp); db.session.commit()
+
+        db.session.commit()
         return redirect(url_for("admin.composition_list"))
     return render_template("admin/composition_form.html", composition=None)
 
@@ -214,7 +242,22 @@ def composition_edit(comp_id):
         file = request.files.get("image")
         if file and file.filename:
             try:
+                # видаляємо старе фото з диску
+                if comp.image:
+                    upload_folder = os.path.join(current_app.static_folder, "img/uploads")
+                    old_path = os.path.join(upload_folder, comp.image)
+                    old_preview = os.path.join(upload_folder, f"preview_{comp.image}")
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                    if os.path.exists(old_preview):
+                        os.remove(old_preview)
+
+                # зберігаємо нове
                 filename, preview = save_image(file)
+                img = CompositionImage(composition_id=comp.id,
+                                       filename=filename,
+                                       preview_filename=preview)
+                db.session.add(img)
                 comp.image = filename
             except Exception as e:
                 flash(f"Помилка завантаження: {e}")
@@ -244,3 +287,47 @@ def composition_delete(comp_id):
     db.session.delete(comp); db.session.commit()
     flash("Композицію успішно видалено!")
     return redirect(url_for("admin.composition_list"))
+
+# --- маршрути палітри ---
+
+@bp.route("/palette")
+@login_required
+def palette_list():
+    palette = ColorPalette.query.order_by(ColorPalette.sort_order).all()
+    return render_template("admin/palette.html", palette=palette)
+
+@bp.route("/palette/add", methods=["POST"])
+@login_required
+def palette_add():
+    is_default = "is_default" in request.form
+    if is_default:
+        ColorPalette.query.update({"is_default": False})
+        db.session.flush()
+    db.session.add(ColorPalette(
+        color_name=request.form["color_name"],
+        color_hex=request.form["color_hex"],
+        price_modifier=float(request.form.get("price_modifier") or 0) / 100,
+        is_default=is_default,
+        sort_order=int(request.form.get("sort_order") or 0)
+    ))
+    db.session.commit()
+    return redirect(url_for("admin.palette_list"))
+
+@bp.route("/palette/<int:color_id>/delete", methods=["POST"])
+@login_required
+def palette_delete(color_id):
+    c = ColorPalette.query.get_or_404(color_id)
+    db.session.delete(c)
+    db.session.commit()
+    return redirect(url_for("admin.palette_list"))
+
+
+# маршрут для збереження порядку:
+@bp.route("/images/reorder", methods=["POST"])
+@login_required
+def images_reorder():
+    order = request.get_json().get("order", [])
+    for i, image_id in enumerate(order):
+        ProductImage.query.filter_by(id=int(image_id)).update({"sort_order": i})
+    db.session.commit()
+    return jsonify({"ok": True})

@@ -26,6 +26,8 @@ def faq():
 @bp.route("/catalog")
 def catalog():
     products = Product.query.filter_by(is_active=True).all()
+    for product in products:
+        product.colors_list = [c.to_dict() for c in product.colors]
     return render_template("public/catalog.html", products=products)
 
 # Детальна сторінка товару

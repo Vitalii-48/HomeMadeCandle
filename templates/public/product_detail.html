@@ -40,25 +40,10 @@
       <div class="mb-2 small text-muted">
         Вага: {{ product.weight|int }} г
       </div>
-
-
       <div class="mb-3">
         <label class="form-label">Колір</label>
-        <div class="d-flex gap-2 flex-wrap">
-          {% for c in product.colors %}
-            <input type="radio" class="btn-check" name="color" id="color-{{ c.id }}"
-                   value="{{ c.id }}" {% if loop.first %}checked{% endif %}>
-            <label class="btn btn-outline-secondary" for="color-{{ c.id }}">
-              <span class="badge rounded-pill me-2" style="background-color: {{ c.color_hex }};">&nbsp;&nbsp;</span>
-              {{ c.color_name }}
-              {% if c.price_modifier and c.price_modifier > 0 %}
-                <span class="small text-muted">(+{{ (c.price_modifier*100)|round(0) }}%)</span>
-              {% endif %}
-            </label>
-          {% endfor %}
-        </div>
       </div>
-
+      {% include "partials/color_picker.html" %}
       <div class="mb-3">
         <label class="form-label">Кількість</label>
         <div class="input-group" style="max-width: 120px;">
@@ -68,8 +53,14 @@
         </div>
       </div>
 
+      <div id="product-data"
+        data-id="{{ product.id }}"
+        data-price="{{ product.price|int }}"
+        data-colors='{{ colors|tojson|safe }}'> <!-- використав одинарні лапки, бо путає -->
+      </div>
+
       <div class="mb-3">
-        <div id="price-display" class="fw-semibold">{{ product.price|int }}</div>
+        <div id="price-display" class="fw-semibold">Ціна: {{ product.price|int }} грн.</div>
       </div>
 
       <button class="btn btn-primary" id="add-to-cart">Додати в кошик</button>
@@ -82,24 +73,27 @@
   document.getElementById('qty-plus').onclick  = () => qty.value = parseInt(qty.value)+1;
 
   // Оновлення ціни при зміні кольору (+10% якщо не білий)
-  const priceBase = {{ product.price|int }};
-  const colorInputs = document.querySelectorAll('input[name="color"]');
+  const colorInputs = document.querySelectorAll('input[name="color-{{ product.id }}"]');
   const priceEl = document.getElementById('price-display');
+  const productData = document.getElementById('product-data');
+  const productId = parseInt(productData.dataset.id);
+  const priceBase = parseInt(productData.dataset.price);
 
   function updatePrice() {
-    const selectedId = document.querySelector('input[name="color"]:checked').value;
-    const color = {{ colors|tojson }};
-    const found = color.find(c => c.id == selectedId);
+    const selectedId = document.querySelector('input[name="color-{{ product.id }}"]:checked').value;
+    const colors = JSON.parse(productData.dataset.colors);
+
+    const found = colors.find(c => c.id == selectedId);
     const modifier = found ? (found.price_modifier || 0) : 0;
-    const price = (priceBase * (1 + modifier));
+    const price = Math.round(priceBase * (1 + modifier));
     priceEl.textContent = `Ціна: ${price} грн.`;
   }
   colorInputs.forEach(el => el.addEventListener('change', updatePrice));
   updatePrice();
 
   document.getElementById('add-to-cart').onclick = async () => {
-    const colorId = parseInt(document.querySelector('input[name="color"]:checked').value);
-    const payload = { product_id: {{ product.id }}, color_id: colorId, quantity: parseInt(qty.value) };
+    const colorId = parseInt(document.querySelector('input[name="color-{{ product.id }}"]:checked').value);
+    const payload = { product_id:  productId, color_id: colorId, quantity: parseInt(qty.value) };
     const res = await fetch("/cart/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (res.ok) { window.location.href = "/cart"; }
   };

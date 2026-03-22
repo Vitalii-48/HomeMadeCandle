@@ -93,25 +93,61 @@
     <button type="button" class="btn btn-sm btn-outline-primary" onclick="addColorRow()">+ Колір</button>
 
     <!-- Фотографії -->
-    <hr class="my-4">
-    <h5>Зображення</h5>
-    <div  id="image-fields" class="row mb-3">
-      {% for img in images %}
-      <div class="col-6 col-md-3 mb-3 image-row">
-        <div class="p-2 text-center position-relative" style="width: 120px; aspect-ratio: 1/1; margin: 0 auto;">
-          <input type="hidden" name="image_id[]" value="{{ img.id }}">
-          <img src="{{ url_for('static', filename='img/uploads/' + img.preview_filename) }}"
-               class="img-thumbnail mb-2 w-100 h-100"
-               style="aspect-ratio: 1/1; object-fit: cover; max-width: 120px; margin: 0 auto;">
-          <button type="button"
-                  class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 rounded-circle"
-                  onclick="apiDelete('image', '{{ img.id }}', this)">&times;</button>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addImageRow()">+ Додати фото</button>
+<hr class="my-4">
+<h5>Зображення</h5>
 
+{% if product %}
+<div id="upload-url" data-url="{{ url_for('admin.image_add', product_id=product.id) }}"></div>
+<!-- Існуючі фото з перетягуванням -->
+<div id="image-sortable" class="row mb-3">
+  {% for img in images %}
+  <div class="col-6 col-md-3 mb-3 image-row" data-id="{{ img.id }}">
+    <div class="position-relative text-center" style="cursor:grab;">
+      <img src="{{ url_for('static', filename='img/uploads/' ~ (img.preview_filename or img.filename)) }}"
+           class="img-thumbnail w-100"
+           style="height:120px;object-fit:cover;">
+      {% if loop.first %}
+        <span class="position-absolute top-0 start-0 m-1 badge text-bg-primary"
+              style="font-size:10px;">Головне</span>
+      {% endif %}
+      <button type="button"
+              class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-1"
+              style="width:24px;height:24px;padding:0;line-height:1;"
+              onclick="apiDelete('image', '{{ img.id }}', this)">&times;</button>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">Немає фото.</p>
+  {% endfor %}
+</div>
+
+
+
+  <input type="file" name="images[]" id="file-input"
+         accept=".jpg,.jpeg,.png,.webp" multiple class="d-none">
+
+  <div id="drop-zone"
+       class="border rounded p-4 text-center mb-3"
+       style="border: 2px dashed #adb5bd; cursor:pointer; transition: background 0.2s;"
+       onclick="document.getElementById('file-input').click()">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+         stroke="#adb5bd" stroke-width="1.5" class="mb-2 d-block mx-auto">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/>
+      <line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    <p class="mb-1 text-muted">Перетягніть фото сюди або
+      <span class="text-primary" style="text-decoration:underline;">виберіть файли</span>
+    </p>
+    <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Перше стане головним.</p>
+    <div id="new-previews" class="row g-2 mt-3 d-none justify-content-center"></div>
+  </div>
+
+  <button type="button" id="upload-btn" class="btn btn-primary btn-sm d-none">
+    Завантажити фото
+  </button>
+
+{% endif %}
 
 
     <!-- Футер форми -->
@@ -158,36 +194,9 @@ function addColorRow() {
   markDirty();
 }
 
-// Додавання рядка зображення
-function addImageRow() {
-  const container = document.getElementById("image-fields");
-  const div = document.createElement("div");
-  div.className = "col-6 col-md-3 mb-3 image-row";
-  div.innerHTML = `
-    <div class="card p-2 text-center shadow-sm position-relative">
-      <input type="hidden" name="image_id[]" value="new">
-      <img class="img-thumbnail mb-2 d-none w-100" style="aspect-ratio: 1/1; object-fit: cover; max-width: 120px; margin: 0 auto;">
-      <input type="file" name="image_file[]" class="form-control form-control-sm mb-2" accept="image/*" onchange="previewImage(this)">
-      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="this.closest('.image-row').remove()">Скасувати</button>
-    </div>
-  `;
-  container.appendChild(div);
-  markDirty();
-}
 
-// Попередній перегляд обраного фото
-function previewImage(input) {
-  const file = input.files[0];
-  const imgElement = input.parentElement.querySelector('img');
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imgElement.src = e.target.result;
-      imgElement.classList.remove('d-none');
-    };
-    reader.readAsDataURL(file);
-  }
-}
+
+
 
 
 async function apiDelete(type, id, btn) {
@@ -209,6 +218,136 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("input", markDirty);
   form.addEventListener("change", markDirty); // для чекбоксів, file input, color input
 });
+
+
+// ===== DRAG & DROP ЗАВАНТАЖЕННЯ =====
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const uploadBtn = document.getElementById('upload-btn');
+const newPreviews = document.getElementById('new-previews');
+
+if (dropZone) {
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.style.background = '#f0f4ff';
+    dropZone.style.borderColor = '#0d6efd';
+  });
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.style.background = '';
+    dropZone.style.borderColor = '#adb5bd';
+  });
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.style.background = '';
+    dropZone.style.borderColor = '#adb5bd';
+    const dt = new DataTransfer();
+    [...e.dataTransfer.files].forEach(f => dt.items.add(f));
+    fileInput.files = dt.files;
+    showPreviews(fileInput.files);
+  });
+  fileInput.addEventListener('change', () => showPreviews(fileInput.files));
+}
+
+// ===== ЗАВАНТАЖЕННЯ ФОТО ЧЕРЕЗ FETCH =====
+const uploadUrl = document.getElementById('upload-url')?.dataset.url;
+if (uploadBtn) {
+  uploadBtn.addEventListener('click', async () => {
+    if (!fileInput.files.length) return;
+
+    const formData = new FormData();
+    [...fileInput.files].forEach(f => formData.append('images[]', f));
+
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = 'Завантаження...';
+
+    const res = await fetch(uploadUrl, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      alert('Помилка завантаження');
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Завантажити фото';
+    }
+  });
+}
+
+function showPreviews(files) {
+  newPreviews.innerHTML = '';
+  if (!files.length) return;
+  newPreviews.classList.remove('d-none');
+  uploadBtn.classList.remove('d-none');
+  [...files].forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const col = document.createElement('div');
+      col.className = 'col-4 col-md-2';
+      col.innerHTML = `
+        <div class="position-relative">
+          <img src="${e.target.result}" class="img-thumbnail w-100"
+               style="height:80px;object-fit:cover;">
+          ${i === 0 ? '<span class="position-absolute top-0 start-0 m-1 badge text-bg-primary" style="font-size:9px;">Головне</span>' : ''}
+        </div>`;
+      newPreviews.appendChild(col);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ===== СОРТУВАННЯ ІСНУЮЧИХ ФОТО =====
+const sortable = document.getElementById('image-sortable');
+let dragItem = null;
+
+if (sortable) {
+  sortable.querySelectorAll('.image-row').forEach(row => {
+    row.setAttribute('draggable', true);
+    row.addEventListener('dragstart', () => {
+      dragItem = row;
+      setTimeout(() => row.style.opacity = '0.4', 0);
+    });
+    row.addEventListener('dragend', () => {
+      dragItem.style.opacity = '1';
+      dragItem = null;
+      updateSortOrder();
+      updateMainBadge();
+    });
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (dragItem && dragItem !== row) {
+        const rect = row.getBoundingClientRect();
+        sortable.insertBefore(dragItem, e.clientX < rect.left + rect.width / 2 ? row : row.nextSibling);
+      }
+    });
+  });
+}
+
+function updateMainBadge() {
+  sortable.querySelectorAll('.image-row').forEach((row, i) => {
+    const wrap = row.querySelector('.position-relative');
+    const badge = row.querySelector('.badge.text-bg-primary');
+    if (i === 0 && !badge) {
+      const b = document.createElement('span');
+      b.className = 'position-absolute top-0 start-0 m-1 badge text-bg-primary';
+      b.style.fontSize = '10px';
+      b.textContent = 'Головне';
+      wrap.appendChild(b);
+    } else if (i !== 0 && badge) {
+      badge.remove();
+    }
+  });
+}
+
+async function updateSortOrder() {
+  const ids = [...sortable.querySelectorAll('.image-row')].map(r => r.dataset.id);
+  await fetch('/admin/images/reorder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order: ids })
+  });
+}
 
 </script>
 {% endblock %}

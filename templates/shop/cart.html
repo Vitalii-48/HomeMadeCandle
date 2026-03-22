@@ -12,15 +12,23 @@
               <img src="{{ url_for('static', filename='img/uploads/' ~ (it.cover.preview_filename or it.cover.filename)) }}"
                    alt="" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
             {% endif %}
+
+            {% if it.product %}
+              <div>
+                <div class="fw-semibold">{{ it.product.name }}</div>
+                {% if it.color %}
+                  <div class="small text-muted d-flex gap-2">
+                    Колір: <span class="swatch-circle d-inline-block" style="background:{{ it.color.color_hex }}; border: 2px solid #dee2e6">&nbsp;&nbsp;</span> {{ it.color.color_name }}
+                  </div>
+                {% endif %}
+                <div class="small">Ціна: {{ it.unit_price|int }} грн.</div>
+              </div>
+            {% elif it.composition %}
             <div>
-              <div class="fw-semibold">{{ it.product.name }}</div>
-              {% if it.color %}
-                <div class="small text-muted">
-                  Колір: <span class="badge me-1" style="background:{{ it.color.color_hex }};">&nbsp;&nbsp;</span> {{ it.color.color_name }}
-                </div>
-              {% endif %}
-              <div class="small">Ціна: {{ it.unit_price|int }} грн.</div>
+              <div class="fw-semibold">{{ it.composition.title }}</div>
+              <div class="small">Ціна: {{it.unit_price|int }} грн.</div>
             </div>
+            {% endif %}
           </div>
           <div class="d-flex align-items-center gap-2">
             <input type="number" min="1" value="{{ it.quantity }}" class="form-control"
@@ -31,9 +39,12 @@
         </div>
       {% endfor %}
     </div>
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="fw-semibold">Всього: {{ total|int }} грн.</div>
-      <a class="btn btn-primary" href="{{ url_for('shop.checkout') }}">Оформити замовлення</a>
+    <div class="d-flex justify-content-between align-items-start">
+      <div class="fw-semibold mt-2">Всього: {{ total|int }} грн.</div>
+      <div class="d-flex flex-column align-items-end gap-3">
+        <a class="btn btn-primary" href="{{ url_for('shop.checkout') }}">Оформити замовлення</a>
+        <a class="btn btn-outline-secondary" href="{{ back_url }}">← Повернутись</a>
+      </div>
     </div>
   {% else %}
     <p>Кошик порожній.</p>
