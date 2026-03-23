@@ -63,19 +63,44 @@ def product_edit(product_id=None):
         product.description = request.form.get("description")
         product.wax_type = request.form.get("wax_type")
         product.category = request.form.get("category")
-        product.price = int(request.form.get("price") or 0)
+        product.length = int(request.form.get("length") or 0)
         product.width = int(request.form.get("width") or 0)
         product.height = int(request.form.get("height") or 0)
-        product.depth = int(request.form.get("depth") or 0)
         product.weight = int(request.form.get("weight") or 0)
+        product.price = int(request.form.get("price") or 0)
         product.is_active = "is_active" in request.form
 
         db.session.flush()
 
-        # копіюємо палітру тільки для нового товару
-        if is_new:
+        # ✏️ ЗМІНА: оновлення кольорів при збереженні
+        color_ids = request.form.getlist("color_id[]")
+        color_names = request.form.getlist("color_name[]")
+        color_hexes = request.form.getlist("color_hex[]")
+
+        for i, cid in enumerate(color_ids):
+            name = color_names[i] if i < len(color_names) else ""
+            hex_ = color_hexes[i] if i < len(color_hexes) else "#ffffff"
+            # ✏️ ЗМІНА: читаємо модифікатор по індексу
+            modifier = 0.1 if request.form.get(f"color_modifier_{i}") == "1" else 0.0
+
+            if cid == "new" or not cid or cid == "None":
+                db.session.add(Color(
+                    product_id=product.id,
+                    color_name=name,
+                    color_hex=hex_,
+                    price_modifier=modifier,
+                ))
+            else:
+                color = Color.query.get(int(cid))
+                if color:
+                    color.color_name = name
+                    color.color_hex = hex_
+                    color.price_modifier = modifier
+
+        # ✏️ ЗМІНА: палітру копіюємо тільки якщо новий товар І кольорів не передано
+        if is_new and not color_ids:
             palette = ColorPalette.query.order_by(ColorPalette.sort_order).all()
-            for p in palette:
+            for j, p in enumerate(palette):
                 db.session.add(Color(
                     product_id=product.id,
                     color_name=p.color_name,
@@ -83,6 +108,26 @@ def product_edit(product_id=None):
                     is_default=p.is_default,
                     price_modifier=p.price_modifier,
                 ))
+
+
+
+        files = request.files.getlist("images[]")
+        max_order = db.session.query(
+            db.func.max(ProductImage.sort_order)
+        ).filter_by(product_id=product.id).scalar() or -1
+
+        for i, file in enumerate(files):
+            if file and file.filename:
+                try:
+                    filename, preview = save_image(file)
+                    db.session.add(ProductImage(
+                        product_id=product.id,
+                        filename=filename,
+                        preview_filename=preview,
+                        sort_order=max_order + 1 + i
+                    ))
+                except Exception as e:
+                    flash(f"Помилка завантаження {file.filename}: {e}")
 
         db.session.commit()
         flash("Дані збережено!")

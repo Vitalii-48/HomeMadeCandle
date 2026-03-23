@@ -53,7 +53,7 @@
 
     <div class="col-md-4">
       <label class="form-label">Довжина (мм)</label>
-      <input name="height" type="number" step="1" min="0" class="form-control" value="{{ product.height|int if product else '0' }}">
+      <input name="length" type="number" step="1" min="0" class="form-control" value="{{ product.length|int if product else '0' }}">
     </div>
 
     <div class="col-md-4">
@@ -63,7 +63,7 @@
 
     <div class="col-md-4">
       <label class="form-label">Висота (мм)</label>
-      <input name="depth" type="number" step="1" min="0" class="form-control" value="{{ product.depth|int if product else '0' }}">
+      <input name="height" type="number" step="1" min="0" class="form-control" value="{{ product.height|int if product else '0' }}">
     </div>
 
     <div class="col-md-4">
@@ -81,10 +81,17 @@
         <div class="col-5">
           <input name="color_name[]" class="form-control form-control-sm" value="{{ color.color_name }}">
         </div>
-        <div class="col-4">
+        <div class="col-3">
           <input name="color_hex[]" type="color" class="form-control form-control-color w-100" value="{{ color.color_hex }}">
         </div>
-        <div class="col-3">
+        <div class="col-3 d-flex align-items-center gap-2">
+          <input class="form-check-input" type="checkbox"
+             name="color_modifier_{{ loop.index0 }}"
+             value="1"
+             {% if color.price_modifier %}checked{% endif %}>
+          <label class="small mb-0">+10%</label>
+        </div>
+        <div class="col-2">
           <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="apiDelete('color', '{{ color.id }}', this)">Видалити</button>
         </div>
       </div>
@@ -92,13 +99,13 @@
     </div>
     <button type="button" class="btn btn-sm btn-outline-primary" onclick="addColorRow()">+ Колір</button>
 
-    <!-- Фотографії -->
+<!-- Фотографії -->
 <hr class="my-4">
 <h5>Зображення</h5>
 
 {% if product %}
+{# ✏️ ЗМІНА: існуючий товар — окреме завантаження через fetch як раніше #}
 <div id="upload-url" data-url="{{ url_for('admin.image_add', product_id=product.id) }}"></div>
-<!-- Існуючі фото з перетягуванням -->
 <div id="image-sortable" class="row mb-3">
   {% for img in images %}
   <div class="col-6 col-md-3 mb-3 image-row" data-id="{{ img.id }}">
@@ -120,35 +127,40 @@
   <p class="text-muted">Немає фото.</p>
   {% endfor %}
 </div>
-
-
-
-  <input type="file" name="images[]" id="file-input"
-         accept=".jpg,.jpeg,.png,.webp" multiple class="d-none">
-
-  <div id="drop-zone"
-       class="border rounded p-4 text-center mb-3"
-       style="border: 2px dashed #adb5bd; cursor:pointer; transition: background 0.2s;"
-       onclick="document.getElementById('file-input').click()">
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-         stroke="#adb5bd" stroke-width="1.5" class="mb-2 d-block mx-auto">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-      <polyline points="17 8 12 3 7 8"/>
-      <line x1="12" y1="3" x2="12" y2="15"/>
-    </svg>
-    <p class="mb-1 text-muted">Перетягніть фото сюди або
-      <span class="text-primary" style="text-decoration:underline;">виберіть файли</span>
-    </p>
-    <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Перше стане головним.</p>
-    <div id="new-previews" class="row g-2 mt-3 d-none justify-content-center"></div>
-  </div>
-
-  <button type="button" id="upload-btn" class="btn btn-primary btn-sm d-none">
-    Завантажити фото
-  </button>
-
 {% endif %}
 
+{# ✏️ ЗМІНА: зона завантаження показується завжди — і для нового, і для існуючого товару #}
+<input type="file" name="images[]" id="file-input"
+       accept=".jpg,.jpeg,.png,.webp" multiple class="d-none">
+
+<div id="drop-zone"
+     class="border rounded p-4 text-center mb-3"
+     style="border: 2px dashed #adb5bd; cursor:pointer; transition: background 0.2s;"
+     onclick="document.getElementById('file-input').click()">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+       stroke="#adb5bd" stroke-width="1.5" class="mb-2 d-block mx-auto">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="17 8 12 3 7 8"/>
+    <line x1="12" y1="3" x2="12" y2="15"/>
+  </svg>
+  <p class="mb-1 text-muted">Перетягніть фото сюди або
+    <span class="text-primary" style="text-decoration:underline;">виберіть файли</span>
+  </p>
+  {% if product %}
+  <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Перше стане головним.</p>
+  {% else %}
+  {# ✏️ ЗМІНА: підказка для нового товару #}
+  <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Фото збережуться разом з товаром.</p>
+  {% endif %}
+  <div id="new-previews" class="row g-2 mt-3 d-none justify-content-center"></div>
+</div>
+
+{# ✏️ ЗМІНА: кнопка "Завантажити фото" тільки для існуючого товару (fetch upload) #}
+{% if product %}
+<button type="button" id="upload-btn" class="btn btn-primary btn-sm d-none">
+  Завантажити фото
+</button>
+{% endif %}
 
     <!-- Футер форми -->
     <div class="col-12 mt-5 p-3 bg-light d-flex flex-column align-items-start rounded">
@@ -182,18 +194,23 @@ function markDirty() {
 
 function addColorRow() {
   const container = document.getElementById("color-fields");
+  // ✏️ ЗМІНА: рахуємо поточний індекс для правильного name
+  const index = container.querySelectorAll('.color-row').length;
   const div = document.createElement("div");
-  div.className = "row g-2 mb-2 color-row";
+  div.className = "row g-2 mb-2 align-items-center color-row";
   div.innerHTML = `
     <input type="hidden" name="color_id[]" value="new">
-    <div class="col-5"><input name="color_name[]" class="form-control form-control-sm" placeholder="Назва"></div>
-    <div class="col-4"><input name="color_hex[]" type="color" class="form-control form-control-color w-100" value="#ffffff"></div>
-    <div class="col-3"><button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="this.closest('.color-row').remove()">Видалити</button></div>
+    <div class="col-4"><input name="color_name[]" class="form-control form-control-sm" placeholder="Назва"></div>
+    <div class="col-3"><input name="color_hex[]" type="color" class="form-control form-control-color w-100" value="#ffffff"></div>
+    <div class="col-3 d-flex align-items-center gap-2">
+      <input class="form-check-input" type="checkbox" name="color_modifier_${index}" value="1">
+      <label class="small mb-0">+10%</label>
+    </div>
+    <div class="col-2"><button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="this.closest('.color-row').remove()">×</button></div>
   `;
   container.appendChild(div);
   markDirty();
 }
-
 
 
 
@@ -279,7 +296,7 @@ function showPreviews(files) {
   newPreviews.innerHTML = '';
   if (!files.length) return;
   newPreviews.classList.remove('d-none');
-  uploadBtn.classList.remove('d-none');
+  if (uploadBtn) uploadBtn.classList.remove('d-none');
   [...files].forEach((file, i) => {
     const reader = new FileReader();
     reader.onload = (e) => {

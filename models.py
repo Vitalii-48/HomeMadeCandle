@@ -10,10 +10,11 @@ class Product(db.Model):
     description = db.Column(db.Text)
     wax_type = db.Column(db.String(64))
     category = db.Column(db.String(64))
+    length = db.Column(db.Integer)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
-    depth = db.Column(db.Integer)
     weight = db.Column(db.Integer)
+
     price = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     colors = db.relationship("Color", backref="product", cascade="all, delete-orphan")
