@@ -1,4 +1,5 @@
 # models.py
+
 from datetime import datetime
 from flask_login import UserMixin
 from extensions import db
@@ -21,6 +22,23 @@ class Product(db.Model):
     images = db.relationship("ProductImage", backref="product",
                              order_by="ProductImage.sort_order",
                              cascade="all, delete-orphan")
+
+    # Створення вільного SKU
+    @staticmethod
+    def get_next_sku():
+        existing_skus = db.session.query(Product.sku).all()
+        used = set()
+        for s in existing_skus:
+            try:
+                used.add(int(s[0]))
+            except (ValueError, TypeError):
+                continue
+
+        for i in range(1, len(used) + 2):
+            if i not in used:
+                return i
+        return None
+
 
 class Color(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -102,7 +120,7 @@ class ColorPalette(db.Model):
     color_name = db.Column(db.String(64), nullable=False)
     color_hex = db.Column(db.String(7), nullable=False)
     is_default = db.Column(db.Boolean, default=False)
-    price_modifier = db.Column(db.Float, default=0.0)
+    price_modifier = db.Column(db.Integer, default=0)
     sort_order = db.Column(db.Integer, default=0)
 
     def to_dict(self):
@@ -113,4 +131,5 @@ class ColorPalette(db.Model):
             "is_default": self.is_default,
             "price_modifier": self.price_modifier,
         }
+
 

@@ -9,7 +9,7 @@
       <div class="col-12 col-md-6 col-lg-4 mb-4">
         <div class="card h-100">
           {% if comp.image %}
-          <img src="{{ url_for('static', filename='img/uploads/' ~ comp.image) }}" class="card-img-top img-fluid" alt="{{ comp.title }}">
+          <img src="{{ get_image_url(comp.image) }}" class="card-img-top img-fluid" alt="{{ comp.title }}" class="card-img-top img-fluid" alt="{{ comp.title }}">
           {% endif %}
 
           <div class="card-body">

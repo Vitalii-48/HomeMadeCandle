@@ -1,11 +1,11 @@
 # blueprints/admin/routes.py
-import os
-from flask import render_template, request, redirect, url_for, flash, current_app, jsonify
+
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, login_user, logout_user
 from werkzeug.security import check_password_hash
-from extensions import db, login_manager
+from extensions import db
 from models import Product, Color, ProductImage, Order, User, Composition, CompositionImage, ColorPalette
-from services.images import save_image
+from services.images import save_image, delete_images
 from . import bp
 
 # Головна сторінка адмінки
@@ -13,11 +13,6 @@ from . import bp
 @login_required
 def admin_index():
   return render_template("admin/index.html")
-
-# Завантаження користувача для Flask-Login
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 # Авторизація (Login)
 @bp.route("/login", methods=["GET", "POST"])
@@ -45,6 +40,7 @@ def logout():
 def product_list():
     products = Product.query.order_by(Product.name).all()
     return render_template("admin/product_list.html", products=products)
+
 
 @bp.route("/products/edit", methods=["GET", "POST"])
 @bp.route("/products/edit/<int:product_id>", methods=["GET", "POST"])
@@ -81,7 +77,7 @@ def product_edit(product_id=None):
             name = color_names[i] if i < len(color_names) else ""
             hex_ = color_hexes[i] if i < len(color_hexes) else "#ffffff"
             # ✏️ ЗМІНА: читаємо модифікатор по індексу
-            modifier = 0.1 if request.form.get(f"color_modifier_{i}") == "1" else 0.0
+            modifier = int(request.form.get(f"color_modifier_{i}") or 0)
 
             if cid == "new" or not cid or cid == "None":
                 db.session.add(Color(
@@ -99,7 +95,7 @@ def product_edit(product_id=None):
 
         # ✏️ ЗМІНА: палітру копіюємо тільки якщо новий товар І кольорів не передано
         if is_new and not color_ids:
-            palette = ColorPalette.query.order_by(ColorPalette.sort_order).all()
+            palette = ColorPalette.query.order_by(ColorPalette.is_default.desc(), ColorPalette.sort_order).all()
             for j, p in enumerate(palette):
                 db.session.add(Color(
                     product_id=product.id,
@@ -134,19 +130,25 @@ def product_edit(product_id=None):
         return redirect(url_for("admin.product_edit", product_id=product.id))
 
     if product:
-        colors = Color.query.filter_by(product_id=product.id).all()
+        colors = Color.query.filter_by(product_id=product.id).order_by(Color.is_default.desc()).all()
+        for c in colors:
+            print(f"Color: {c.color_name}, modifier: {c.price_modifier}")
+        suggested_sku = product.sku
+
     else:
         # для нового товару показуємо палітру як дефолтні кольори
-        palette = ColorPalette.query.order_by(ColorPalette.sort_order).all()
-        colors = [Color(color_name=p.color_name, color_hex=p.color_hex) for p in palette]
+        palette = ColorPalette.query.order_by(ColorPalette.is_default.desc(), ColorPalette.sort_order).all()
+        colors = [Color(color_name=p.color_name, color_hex=p.color_hex, price_modifier=p.price_modifier) for p in palette]
+        suggested_sku = Product.get_next_sku()
     images = ProductImage.query.filter_by(product_id=product.id).order_by(ProductImage.sort_order).all() if product else []
-    return render_template("admin/product_form.html", product=product, colors=colors, images=images)
+    return render_template("admin/product_form.html", product=product, colors=colors, images=images, suggested_sku=suggested_sku)
 
 
 @bp.route("/products/<int:product_id>/images/add", methods=["POST"])
 @login_required
 def image_add(product_id):
     files = request.files.getlist("images[]")
+
     # визначаємо поточний максимальний sort_order
     max_order = db.session.query(
         db.func.max(ProductImage.sort_order)
@@ -185,22 +187,9 @@ def color_delete(color_id):
 @login_required
 def image_delete(image_id):
     img = ProductImage.query.get_or_404(image_id)
-    # шлях до файлу
-    upload_folder = os.path.join(current_app.static_folder, "img/uploads")
-    file_path = os.path.join(upload_folder, img.filename)
-    preview_path = os.path.join(upload_folder, img.preview_filename)
-
-    # пробуємо видалити основний файл
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-    # пробуємо видалити прев’ю
-    if os.path.exists(preview_path):
-        os.remove(preview_path)
-
-    # видаляємо запис з БД
-
-    db.session.delete(img); db.session.commit()
+    delete_images([img.filename, img.preview_filename])
+    db.session.delete(img)
+    db.session.commit()
     return {"status": "success"}
 
 # Видалення продукту
@@ -210,21 +199,12 @@ def product_delete(product_id):
     product = Product.query.get_or_404(product_id)
 
     # Видаляємо пов’язані зображення з диску
-    upload_folder = os.path.join(current_app.static_folder, "img/uploads")
     for img in ProductImage.query.filter_by(product_id=product.id).all():
-        file_path = os.path.join(upload_folder, img.filename)
-        preview_path = os.path.join(upload_folder, img.preview_filename)
-
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        if os.path.exists(preview_path):
-            os.remove(preview_path)
-
+        delete_images([img.filename, img.preview_filename])
         db.session.delete(img)
 
     # Видаляємо пов’язані кольори
     Color.query.filter_by(product_id=product.id).delete()
-
     db.session.delete(product)
     db.session.commit()
     flash("Продукт успішно видалено!")
@@ -289,13 +269,7 @@ def composition_edit(comp_id):
             try:
                 # видаляємо старе фото з диску
                 if comp.image:
-                    upload_folder = os.path.join(current_app.static_folder, "img/uploads")
-                    old_path = os.path.join(upload_folder, comp.image)
-                    old_preview = os.path.join(upload_folder, f"preview_{comp.image}")
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                    if os.path.exists(old_preview):
-                        os.remove(old_preview)
+                    delete_images([comp.image, f"preview_{comp.image}"])
 
                 # зберігаємо нове
                 filename, preview = save_image(file)
@@ -315,20 +289,11 @@ def composition_edit(comp_id):
 def composition_delete(comp_id):
     comp = Composition.query.get_or_404(comp_id)
 
-    upload_folder = os.path.join(current_app.static_folder, "img/uploads")
-
     # основне зображення
     if comp.image:
-        file_path = os.path.join(upload_folder, comp.image)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        preview_name = f"preview_{comp.image}"
-        preview_path = os.path.join(upload_folder, preview_name)
-        if os.path.exists(preview_path):
-            os.remove(preview_path)
+        delete_images([comp.image, f"preview_{comp.image}"])
 
     # видалення запису з БД
-
     db.session.delete(comp); db.session.commit()
     flash("Композицію успішно видалено!")
     return redirect(url_for("admin.composition_list"))
@@ -351,7 +316,7 @@ def palette_add():
     db.session.add(ColorPalette(
         color_name=request.form["color_name"],
         color_hex=request.form["color_hex"],
-        price_modifier=float(request.form.get("price_modifier") or 0) / 100,
+        price_modifier=int(request.form.get("price_modifier") or 0),
         is_default=is_default,
         sort_order=int(request.form.get("sort_order") or 0)
     ))
@@ -376,3 +341,4 @@ def images_reorder():
         ProductImage.query.filter_by(id=int(image_id)).update({"sort_order": i})
     db.session.commit()
     return jsonify({"ok": True})
+

@@ -1,14 +1,14 @@
-# app.py.py
-import os
+# app.py
+
 from flask import Flask
 from config import Config
-from dotenv import load_dotenv
 from extensions import db, migrate, login_manager
 from blueprints.public import bp as public_bp
 from blueprints.shop import bp as shop_bp
 from blueprints.admin import bp as admin_bp
+from services.images import get_image_url
 
-load_dotenv()
+
 
 def create_app():
     # 1. Створення Flask-застосунку
@@ -21,6 +21,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    app.jinja_env.globals["get_image_url"] = get_image_url
 
     # 4. Реєстрація Blueprints (модульна архітектура)
     app.register_blueprint(public_bp)

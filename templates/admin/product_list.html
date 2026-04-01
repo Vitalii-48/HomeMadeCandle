@@ -12,7 +12,7 @@
         <div class="card h-100">
           {% set cover = p.images[0] if p.images else None %}
           {% if cover %}
-          <img class="card-img-top img-fluid" src="{{ url_for('static', filename='img/uploads/' ~ (cover.preview_filename or cover.filename)) }}" alt="{{ p.name }}">
+          <img class="card-img-top img-fluid" src="{{ get_image_url(cover.preview_filename or cover.filename) }}" alt="{{ p.name }}">
           {% endif %}
           <div class="card-body">
             <h5 class="card-title">{{ p.name }}</h5>

@@ -1,19 +1,16 @@
 # blueprints/shop/routes.py
-from itertools import product
 
 from flask import render_template, request, redirect, url_for, jsonify
 from extensions import db
 from models import Product, Color, Order, OrderItem, Composition
 from services.cart import CartService
 from . import bp
-from ..public.routes import compositions
-
 
 # Допоміжна функція для ціни з урахуванням кольору
 def price_with_color(product, color):
     # Якщо колір має ціновий модифікатор, додаємо його до базової ціни
     modifier = color.price_modifier if color else 0.0
-    return round(product.price * (1 + modifier))
+    return round(product.price * (1 + modifier/100))
 
 # Сторінка кошика
 @bp.route("/cart")

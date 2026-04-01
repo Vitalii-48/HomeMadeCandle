@@ -45,10 +45,12 @@
                 {% for c in group %}
                   <div class="col-4">
                     <div class="card h-100 shadow">
-                      <img src="{{ url_for('static', filename='img/uploads/' ~ (c.images[0].preview_filename or c.images[0].filename)) }}"
-                           class="card-img-top img-fluid"
-                           alt="{{ c.name }}"
-                           style="object-fit: cover; aspect-ratio: 4/3; width: 100%;">
+                      {% if c.images %}
+                      <img src="{{ get_image_url(c.images[0].preview_filename or c.images[0].filename) }}"
+                          class="card-img-top img-fluid"
+                          alt="{{ c.name }}"
+                          style="object-fit: cover; aspect-ratio: 4/3; width: 100%;">
+                      {% endif %}
                       <div class="card-body p-0">
                         <h5 class="card-title text-center small mb-0">{{ c.name }}</h5>
                       </div>
@@ -105,7 +107,7 @@
         <div class="carousel-item {% if loop.first %}active{% endif %}">
           <div class="card h-100">
             {% if comp.image %}
-              <img src="{{ url_for('static', filename='img/uploads/' ~ comp.image) }}"
+              <img src="{{ get_image_url(comp.image) }}"
                    class="card-img-top img-fluid" alt="{{ comp.title }}"
                    style="object-fit: cover; max-height: 400px;">
             {% endif %}

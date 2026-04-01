@@ -9,7 +9,7 @@
         <div class="carousel-inner">
           {% for img in product.images %}
             <div class="carousel-item {% if loop.first %}active{% endif %}">
-              <img src="{{ url_for('static', filename='img/uploads/' ~ img.filename) }}" class="d-block w-100 img-fluid" alt="{{ img.alt_text or product.name }}">
+              <img src="{{ get_image_url(img.filename) }}" class="d-block w-100 img-fluid" alt="{{ img.alt_text or product.name }}">
             </div>
           {% endfor %}
         </div>
@@ -85,7 +85,7 @@
 
     const found = colors.find(c => c.id == selectedId);
     const modifier = found ? (found.price_modifier || 0) : 0;
-    const price = Math.round(priceBase * (1 + modifier));
+    const price = Math.round(priceBase * (1 + modifier/100));
     priceEl.textContent = `Ціна: ${price} грн.`;
   }
   colorInputs.forEach(el => el.addEventListener('change', updatePrice));

@@ -3,16 +3,20 @@ import os, uuid
 from PIL import Image
 from werkzeug.utils import secure_filename
 from flask import current_app
+from io import BytesIO
+from supabase import create_client
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
+BUCKET = "images_candles"
+
+def get_supabase():
+    return create_client(
+        os.environ.get("SUPABASE_URL"),
+        os.environ.get("SUPABASE_KEY")
+    )
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def ensure_upload_dir():
-    upload_dir = current_app.config.get("UPLOAD_FOLDER", "static/img/uploads")
-    os.makedirs(upload_dir, exist_ok=True)
-    return upload_dir
 
 def save_image(file_storage):
     filename = file_storage.filename
@@ -21,16 +25,38 @@ def save_image(file_storage):
 
     ext = filename.rsplit(".", 1)[1].lower()
     unique = f"{uuid.uuid4().hex}.{ext}"
-    upload_dir = ensure_upload_dir()
-    original_path = os.path.join(upload_dir, secure_filename(unique))
-    file_storage.save(original_path)
 
-    # Створити прев’ю 200x200
+    # Оригінал
+    file_bytes = file_storage.read()
+    supabase = get_supabase()
+    supabase.storage.from_(BUCKET).upload(unique, file_bytes)
+
+    # Прев'ю 200x200
+    img = Image.open(BytesIO(file_bytes))
+    if ext in ("jpg", "jpeg", "webp"):
+        img = img.convert("RGB")
+    img.thumbnail((200, 200))
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
     preview_name = f"preview_{unique}"
-    preview_path = os.path.join(upload_dir, preview_name)
-    with Image.open(original_path) as img:
-        img = img.convert("RGB") if ext in ("jpg", "jpeg", "webp") else img
-        img.thumbnail((200, 200))
-        img.save(preview_path)
+    supabase.storage.from_(BUCKET).upload(preview_name, buf.read())
 
     return unique, preview_name
+
+def get_image_url(filename):
+    supabase = get_supabase()
+    return supabase.storage.from_(BUCKET).get_public_url(filename)
+
+def delete_image(filename):
+    if not filename:
+        return
+    supabase = get_supabase()
+    supabase.storage.from_(BUCKET).remove([filename])
+
+def delete_images(filenames):
+    filenames = [f for f in filenames if f]  # прибираємо None
+    if not filenames:
+        return
+    supabase = get_supabase()
+    supabase.storage.from_(BUCKET).remove(filenames)

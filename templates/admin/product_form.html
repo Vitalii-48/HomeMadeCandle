@@ -15,14 +15,20 @@
   <h1 class="h4 mb-4">{{ 'Створення товару' if not product else 'Редагування товару' }}</h1>
 
   <form method="post"
-        action="{{ url_for('admin.product_edit', product_id=product.id if product else None) }}"
-        enctype="multipart/form-data"
+        action="{{ url_for('admin.product_edit', product_id=product.id) if product else url_for('admin.product_edit') }}"        enctype="multipart/form-data"
         class="row g-3">
 
     <!-- Поля товару -->
     <div class="col-md-4">
       <label class="form-label">SKU</label>
-      <input name="sku" class="form-control" value="{{ product.sku if product else '' }}" required>
+      <input name="sku" class="form-control
+             {% if not product %}highlight-sku{% endif %}"
+            value="{{ product.sku if product else suggested_sku }}" required>
+      {% if not product %}
+        <small class="form-text text-muted">
+          Запропоновано вільний номер SKU
+        </small>
+      {% endif %}
     </div>
     <div class="col-md-8">
       <label class="form-label">Назва</label>
@@ -84,12 +90,14 @@
         <div class="col-3">
           <input name="color_hex[]" type="color" class="form-control form-control-color w-100" value="{{ color.color_hex }}">
         </div>
-        <div class="col-3 d-flex align-items-center gap-2">
-          <input class="form-check-input" type="checkbox"
-             name="color_modifier_{{ loop.index0 }}"
-             value="1"
-             {% if color.price_modifier %}checked{% endif %}>
-          <label class="small mb-0">+10%</label>
+        <div class="col-3">
+          <div class="input-group input-group-sm">
+            <input type="number" min="0" max="100"
+                name="color_modifier_{{ loop.index0 }}"
+                class="form-control form-control-sm"
+                value="{{ color.price_modifier|int if color.price_modifier else 0 }}">
+          <span class="input-group-text">%</span>
+          </div>
         </div>
         <div class="col-2">
           <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="apiDelete('color', '{{ color.id }}', this)">Видалити</button>
@@ -104,13 +112,11 @@
 <h5>Зображення</h5>
 
 {% if product %}
-{# ✏️ ЗМІНА: існуючий товар — окреме завантаження через fetch як раніше #}
-<div id="upload-url" data-url="{{ url_for('admin.image_add', product_id=product.id) }}"></div>
 <div id="image-sortable" class="row mb-3">
   {% for img in images %}
   <div class="col-6 col-md-3 mb-3 image-row" data-id="{{ img.id }}">
     <div class="position-relative text-center" style="cursor:grab;">
-      <img src="{{ url_for('static', filename='img/uploads/' ~ (img.preview_filename or img.filename)) }}"
+      <img src="{{ get_image_url(img.preview_filename or img.filename) }}"
            class="img-thumbnail w-100"
            style="height:120px;object-fit:cover;">
       {% if loop.first %}
@@ -129,7 +135,6 @@
 </div>
 {% endif %}
 
-{# ✏️ ЗМІНА: зона завантаження показується завжди — і для нового, і для існуючого товару #}
 <input type="file" name="images[]" id="file-input"
        accept=".jpg,.jpeg,.png,.webp" multiple class="d-none">
 
@@ -149,18 +154,11 @@
   {% if product %}
   <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Перше стане головним.</p>
   {% else %}
-  {# ✏️ ЗМІНА: підказка для нового товару #}
   <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Фото збережуться разом з товаром.</p>
   {% endif %}
   <div id="new-previews" class="row g-2 mt-3 d-none justify-content-center"></div>
 </div>
 
-{# ✏️ ЗМІНА: кнопка "Завантажити фото" тільки для існуючого товару (fetch upload) #}
-{% if product %}
-<button type="button" id="upload-btn" class="btn btn-primary btn-sm d-none">
-  Завантажити фото
-</button>
-{% endif %}
 
     <!-- Футер форми -->
     <div class="col-12 mt-5 p-3 bg-light d-flex flex-column align-items-start rounded">
@@ -202,9 +200,11 @@ function addColorRow() {
     <input type="hidden" name="color_id[]" value="new">
     <div class="col-4"><input name="color_name[]" class="form-control form-control-sm" placeholder="Назва"></div>
     <div class="col-3"><input name="color_hex[]" type="color" class="form-control form-control-color w-100" value="#ffffff"></div>
-    <div class="col-3 d-flex align-items-center gap-2">
-      <input class="form-check-input" type="checkbox" name="color_modifier_${index}" value="1">
-      <label class="small mb-0">+10%</label>
+    <div class="col-3">
+      <div class="input-group input-group-sm">
+        <input type="number" min="0" max="100" name="color_modifier_${index}" class="form-control form-control-sm" value="0">
+        <span class="input-group-text">%</span>
+      </div>
     </div>
     <div class="col-2"><button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="this.closest('.color-row').remove()">×</button></div>
   `;
@@ -240,7 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // ===== DRAG & DROP ЗАВАНТАЖЕННЯ =====
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
-const uploadBtn = document.getElementById('upload-btn');
 const newPreviews = document.getElementById('new-previews');
 
 if (dropZone) {
@@ -265,38 +264,11 @@ if (dropZone) {
   fileInput.addEventListener('change', () => showPreviews(fileInput.files));
 }
 
-// ===== ЗАВАНТАЖЕННЯ ФОТО ЧЕРЕЗ FETCH =====
-const uploadUrl = document.getElementById('upload-url')?.dataset.url;
-if (uploadBtn) {
-  uploadBtn.addEventListener('click', async () => {
-    if (!fileInput.files.length) return;
-
-    const formData = new FormData();
-    [...fileInput.files].forEach(f => formData.append('images[]', f));
-
-    uploadBtn.disabled = true;
-    uploadBtn.textContent = 'Завантаження...';
-
-    const res = await fetch(uploadUrl, {
-      method: 'POST',
-      body: formData
-    });
-
-    if (res.ok) {
-      window.location.reload();
-    } else {
-      alert('Помилка завантаження');
-      uploadBtn.disabled = false;
-      uploadBtn.textContent = 'Завантажити фото';
-    }
-  });
-}
 
 function showPreviews(files) {
   newPreviews.innerHTML = '';
   if (!files.length) return;
   newPreviews.classList.remove('d-none');
-  if (uploadBtn) uploadBtn.classList.remove('d-none');
   [...files].forEach((file, i) => {
     const reader = new FileReader();
     reader.onload = (e) => {

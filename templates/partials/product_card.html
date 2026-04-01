@@ -4,7 +4,7 @@
   <div class="card h-100 shadow-sm">
     {% set cover = product.images[0] if product.images else None %}
     {% if cover %}
-      <img src="{{ url_for('static', filename='img/uploads/' ~ (cover.preview_filename or cover.filename)) }}"
+      <img src="{{ get_image_url(cover.preview_filename or cover.filename) }}"
            class="card-img-top img-fluid" alt="{{ product.name }}">
     {% endif %}
     <div class="card-body">
@@ -54,7 +54,7 @@ document.querySelectorAll('input[name="color-{{ product.id }}"]').forEach(el => 
     const found = colorData.find(c => c.id == el.value);
     const modifier = found ? (found.price_modifier || 0) : 0;
     const base = {{ product.price|int }};
-    const price = Math.round(base * (1 + modifier));
+    const price = Math.round(base * (1 + modifier/100));
     // знаходимо елемент ціни в цій же картці
     el.closest('.card-body').querySelector('.price-display').textContent = `Ціна: ${price} грн.`;
   });

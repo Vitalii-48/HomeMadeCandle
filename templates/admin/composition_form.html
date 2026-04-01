@@ -14,6 +14,12 @@
     </div>
     <div class="col-12">
       <label class="form-label">Фото</label>
+      {% if composition and composition.image %}
+        <div class="mb-2">
+          <img src="{{ get_image_url(composition.image) }}"
+               style="height:120px;object-fit:cover;" class="img-thumbnail">
+        </div>
+      {% endif %}
       <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png,.gif">
     </div>
     <div class="col-2">

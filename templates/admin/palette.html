@@ -14,6 +14,7 @@
     <div style="width:32px;height:32px;border-radius:50%;background:{{ c.color_hex }};border:1px solid #dee2e6;"></div>
     <span class="me-auto">{{ c.color_name }}</span>
     <span class="text-muted small">{{ c.color_hex }}</span>
+    <span class="text-muted small">+{{ (c.price_modifier * 100)|int }}%</span>
     <form method="post" action="{{ url_for('admin.palette_delete', color_id=c.id) }}" class="d-inline">
       <button type="submit" class="btn btn-outline-danger btn-sm"
               onclick="return confirm('Видалити колір?')">Видалити</button>
@@ -34,8 +35,15 @@
     <div class="col-3">
       <input name="color_hex" type="color" class="form-control form-control-color w-100" value="#ffffff">
     </div>
-    <div class="col-2">
+    <div class="col-1">
       <input name="sort_order" type="number" class="form-control" placeholder="Порядок" value="0">
+    </div>
+    <div class="col-2">
+      <div class="input-group">
+        <input name="price_modifier" type="number" min="0" max="100"
+           class="form-control" placeholder="%" value="0">
+        <span class="input-group-text">%</span>
+      </div>
     </div>
     <div class="col-2">
       <button type="submit" class="btn btn-primary w-100">+</button>

@@ -9,7 +9,7 @@
         <div class="list-group-item d-flex align-items-center justify-content-between flex-wrap">
           <div class="d-flex align-items-center gap-3">
             {% if it.cover %}
-              <img src="{{ url_for('static', filename='img/uploads/' ~ (it.cover.preview_filename or it.cover.filename)) }}"
+              <img src="{{ get_image_url(it.cover.preview_filename or it.cover.filename) }}"
                    alt="" class="img-thumbnail" style="width:64px;height:64px;object-fit:cover;">
             {% endif %}
 
