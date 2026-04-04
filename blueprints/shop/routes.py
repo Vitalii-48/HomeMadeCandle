@@ -5,7 +5,9 @@ from extensions import db
 from models import Product, Color, Order, OrderItem, Composition
 from services.cart import CartService
 from services.otp import generate_otp, verify_otp
+from services.nova_poshta import search_cities, get_warehouses
 from . import bp
+
 
 # Допоміжна функція для ціни з урахуванням кольору
 def price_with_color(product, color):
@@ -169,6 +171,7 @@ def order_success(order_id):
     return render_template("shop/order_success.html", order=order)
 
 
+# Відправка OTP коду для верифікації номера телефону
 @bp.route("/verify/send", methods=["POST"])
 def send_verification():
     phone = request.get_json().get("phone", "").strip()
@@ -179,6 +182,7 @@ def send_verification():
     return jsonify({"ok": True, "demo_code": code})
 
 
+# Перевірка OTP коду
 @bp.route("/verify/check", methods=["POST"])
 def check_verification():
     data = request.get_json()
@@ -187,3 +191,21 @@ def check_verification():
     if verify_otp(phone, code):
         return jsonify({"ok": True})
     return jsonify({"ok": False, "error": "Невірний або прострочений код"})
+
+
+# Пошук міст Нової Пошти
+@bp.route("/nova-poshta/cities")
+def np_cities():
+    query = request.args.get("q", "")
+    if len(query) < 2:
+        return jsonify([])
+    return jsonify(search_cities(query))
+
+
+# Отримання відділень Нової Пошти за містом
+@bp.route("/nova-poshta/warehouses")
+def np_warehouses():
+    city_ref = request.args.get("city_ref", "")
+    if not city_ref:
+        return jsonify([])
+    return jsonify(get_warehouses(city_ref))
