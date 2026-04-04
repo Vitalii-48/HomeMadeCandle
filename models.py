@@ -46,7 +46,7 @@ class Color(db.Model):
     color_name = db.Column(db.String(64), nullable=False)
     color_hex = db.Column(db.String(7), nullable=False)  # "#FFFFFF"
     is_default = db.Column(db.Boolean, default=False)
-    price_modifier = db.Column(db.Integer, default=0)     # 0.1 = +10% від базової ціни
+    price_modifier = db.Column(db.Integer, default=0)     # надбавка до базової ціни при виборі кольору крім білого
 
     def to_dict(self):
         return {
@@ -131,5 +131,12 @@ class ColorPalette(db.Model):
             "is_default": self.is_default,
             "price_modifier": self.price_modifier,
         }
+
+
+class TelegramUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    chat_id = db.Column(db.BigInteger, unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
