@@ -1,9 +1,10 @@
 # blueprints/shop/routes.py
 
-from flask import render_template, request, redirect, url_for, jsonify
+from flask import render_template, request, redirect, url_for, jsonify, session
 from extensions import db
 from models import Product, Color, Order, OrderItem, Composition
 from services.cart import CartService
+from services.otp import generate_otp, verify_otp
 from . import bp
 
 # Допоміжна функція для ціни з урахуванням кольору
@@ -99,6 +100,13 @@ def checkout():
     if request.method == "POST":
         form = request.form
         cart = CartService.get()
+
+        # Перевірка верифікації номера
+        phone = form.get("phone", "")
+        if session.get("phone_verified") != phone:
+            return render_template("shop/checkout.html",
+                                   error="Підтвердіть номер телефону")
+
         if not cart:
             # Якщо кошик порожній — повертаємо на сторінку кошика
             return redirect(url_for("shop.cart"))
@@ -159,3 +167,23 @@ def checkout():
 def order_success(order_id):
     order = Order.query.get_or_404(order_id)
     return render_template("shop/order_success.html", order=order)
+
+
+@bp.route("/verify/send", methods=["POST"])
+def send_verification():
+    phone = request.get_json().get("phone", "").strip()
+    if not phone:
+        return jsonify({"ok": False, "error": "Введіть номер"})
+    code = generate_otp(phone)
+    # ЕМУЛЯЦІЯ: повертаємо код у відповіді
+    return jsonify({"ok": True, "demo_code": code})
+
+
+@bp.route("/verify/check", methods=["POST"])
+def check_verification():
+    data = request.get_json()
+    phone = data.get("phone", "")
+    code = data.get("code", "")
+    if verify_otp(phone, code):
+        return jsonify({"ok": True})
+    return jsonify({"ok": False, "error": "Невірний або прострочений код"})

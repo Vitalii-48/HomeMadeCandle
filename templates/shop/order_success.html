@@ -4,7 +4,15 @@
 <div class="container text-center py-5">
   <h1 class="h4 mb-3">Дякуємо за замовлення!</h1>
   <p class="text-muted">Номер замовлення: #{{ order.id }}</p>
-  <p>Ми зв’яжемося з вами через: {{ order.contact_method }} ({{ order.phone }})</p>
-  <a class="btn btn-primary" href="{{ url_for('public.catalog') }}">Повернутися до каталогу</a>
+  <p>Ми зв'яжемося з вами за номером <strong>{{ order.phone }}</strong></p>
+  <p class="text-muted">Спосіб зв'язку:
+    {% if order.contact_method == "phone" %}Телефон
+    {% elif order.contact_method == "viber" %}Viber
+    {% elif order.contact_method == "telegram" %}Telegram
+    {% endif %}
+  </p>
+  <a class="btn btn-primary" href="{{ url_for('public.catalog') }}">
+    Повернутися до каталогу
+  </a>
 </div>
 {% endblock %}

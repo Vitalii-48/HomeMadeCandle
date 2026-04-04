@@ -3,17 +3,46 @@
 {% block content %}
 <div class="container">
   <h1 class="h4 mb-3">Оформлення замовлення</h1>
+
+  {% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+
   <form method="post" class="row g-3">
     <div class="col-12 col-md-6">
-      <label class="form-label">Ім’я</label>
+      <label class="form-label">Ім'я</label>
       <input name="name" class="form-control" required>
     </div>
+
+    <!-- Телефон + верифікація -->
     <div class="col-12 col-md-6">
       <label class="form-label">Телефон</label>
-      <input name="phone" type="tel" class="form-control" required>
+      <div class="input-group">
+        <input name="phone" id="phone" type="tel" class="form-control" required>
+        <button class="btn btn-outline-secondary" type="button" id="send-code-btn">
+          Отримати код
+        </button>
+      </div>
     </div>
+
+    <!-- Поле для коду (приховане поки не натиснули "Отримати код") -->
+    <div class="col-12 col-md-6" id="code-section" style="display:none">
+      <label class="form-label">Код підтвердження</label>
+      <div class="input-group">
+        <input type="text" id="code-input" class="form-control"
+               placeholder="Введіть 4-значний код" maxlength="4">
+        <button class="btn btn-outline-primary" type="button" id="verify-btn">
+          Підтвердити
+        </button>
+      </div>
+      <div id="verified-msg" class="text-success mt-1" style="display:none">
+        ✅ Номер підтверджено
+      </div>
+      <div id="error-msg" class="text-danger mt-1" style="display:none"></div>
+    </div>
+
     <div class="col-12 col-md-6">
-      <label class="form-label">Спосіб зв’язку</label>
+      <label class="form-label">Спосіб зв'язку</label>
       <select name="contact_method" class="form-select" required>
         <option value="phone" selected>Телефон</option>
         <option value="viber">Viber</option>
@@ -26,12 +55,67 @@
     </div>
     <div class="col-12">
       <label class="form-label">Коментар</label>
-      <textarea name="comment" class="form-control" rows="3" placeholder="Композиція або спосіб доставки"></textarea>
+      <textarea name="comment" class="form-control" rows="3"
+                placeholder="Композиція або спосіб доставки"></textarea>
     </div>
     <div class="col-12">
-      <button class="btn btn-primary" type="submit">Підтвердити замовлення</button>
-      <a class="btn btn-outline-secondary" href="{{ url_for('shop.cart') }}">Повернутися до кошика</a>
+      <button class="btn btn-primary" type="submit" id="submit-btn" disabled>
+        Підтвердити замовлення
+      </button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('shop.cart') }}">
+        Повернутися до кошика
+      </a>
     </div>
   </form>
 </div>
+
+<script>
+// Відправити код
+document.getElementById("send-code-btn").addEventListener("click", async () => {
+  const phone = document.getElementById("phone").value.trim();
+  if (!phone) {
+    alert("Введіть номер телефону");
+    return;
+  }
+
+  const res = await fetch("/verify/send", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ phone })
+  });
+  const data = await res.json();
+
+  if (data.ok) {
+    document.getElementById("code-section").style.display = "block";
+    // ЕМУЛЯЦІЯ: показуємо код
+    alert(`Ваш код: ${data.demo_code}`);
+  } else {
+    alert(data.error || "Помилка");
+  }
+});
+
+// Перевірити код
+document.getElementById("verify-btn").addEventListener("click", async () => {
+  const phone = document.getElementById("phone").value.trim();
+  const code = document.getElementById("code-input").value.trim();
+  const errorMsg = document.getElementById("error-msg");
+
+  const res = await fetch("/verify/check", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ phone, code })
+  });
+  const data = await res.json();
+
+  if (data.ok) {
+    document.getElementById("verified-msg").style.display = "block";
+    document.getElementById("error-msg").style.display = "none";
+    document.getElementById("submit-btn").disabled = false;
+    document.getElementById("code-section").querySelector("button").disabled = true;
+  } else {
+    errorMsg.textContent = data.error || "Невірний код";
+    errorMsg.style.display = "block";
+  }
+});
+</script>
 {% endblock %}
