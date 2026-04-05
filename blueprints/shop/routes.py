@@ -18,7 +18,15 @@ def price_with_color(product, color):
 # Сторінка кошика
 @bp.route("/cart")
 def cart():
-    referrer = request.referrer or url_for('public.catalog')
+    # Зберігаємо referrer тільки якщо він не сам кошик
+    cart_url = url_for('shop.cart')
+    referrer = request.referrer or ''
+    if referrer and cart_url not in referrer:
+        session['cart_back_url'] = referrer
+
+    back_url = session.get('cart_back_url') or url_for('public.catalog')
+
+
     cart = CartService.get()
     items = []
     total = 0.0
@@ -58,7 +66,7 @@ def cart():
                 "cover": cover
             })
 
-    return render_template("shop/cart.html", items=items, total=total, back_url=referrer)
+    return render_template("shop/cart.html", items=items, total=total, back_url=back_url)
 
 # Додавання товару до кошика
 @bp.route("/cart/add", methods=["POST"])

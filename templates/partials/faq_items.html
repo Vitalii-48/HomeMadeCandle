@@ -1,22 +1,47 @@
 <div class="accordion" id="faqAcc">
+  {% set items = [
+    {
+      'id': 'faq1',
+      'question': 'З чого зроблені свічки?',
+      'answer': 'Свічки виготовлені з якісного воску, безпечного для дому.'
+    },
+    {
+      'id': 'faq2',
+      'question': 'Чи можна замовити нестандартні кольори?',
+      'answer': 'Так, у картці товару обирай доступні кольори; додаткові — за узгодженням.'
+    },
+    {
+      'id': 'faq3',
+      'question': 'Чому ваші свічки без аромату?',
+      'answer': 'Синтетичні ароматизатори можуть викликати алергію або головний біль. Без запаху свічка горить чистіше і не перебиває природний аромат дому.'
+    },
+    {
+      'id': 'faq4',
+      'question': 'Чому соєвий віск кращий за інші?',
+      'answer': 'Соєвий віск — натуральний і рослинний. Він горить повільніше, виділяє менше сажі й токсинів, а отже безпечніший для повітря в приміщенні.'
+    },
+    {
+      'id': 'faq5',
+      'question': 'Як правильно доглядати за свічкою?',
+      'answer': 'Підрізайте ґніт до 5–6 мм перед кожним запалюванням. Перший раз дайте свічці горіти 2–3 години до повного розплавлення верхнього шару воску.'
+    },
+    {
+      'id': 'faq6',
+      'question': 'Яка середня тривалість горіння?',
+      'answer': 'Завдяки соєвому воску свічки горять на 30–50% довше за парафінові. Залежно від розміру — від 25 до 60 годин.'
+    }
+  ] %}
+
+  {% for item in items[:faq_limit|default(items|length)] %}
   <div class="accordion-item">
     <h2 class="accordion-header">
-      <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq1">
-        З чого зроблені свічки?
+      <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#{{ item.id }}">
+        {{ item.question }}
       </button>
     </h2>
-    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-      <div class="accordion-body">Свічки виготовлені з якісного воску, безпечного для дому.</div>
+    <div id="{{ item.id }}" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+      <div class="accordion-body">{{ item.answer }}</div>
     </div>
   </div>
-  <div class="accordion-item">
-    <h2 class="accordion-header">
-      <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq2">
-        Чи можна замовити нестандартні кольори?
-      </button>
-    </h2>
-    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-      <div class="accordion-body">Так, у картці товару обирай доступні кольори; додаткові — за узгодженням.</div>
-    </div>
-  </div>
+  {% endfor %}
 </div>

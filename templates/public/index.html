@@ -139,7 +139,9 @@
 
 <section class="container my-5">
   <h2 class="display-5 mb-4 text-center">Часті питання</h2>
-  {% include 'partials/faq_items.html' %}
+  {% with faq_limit = 3 %}
+    {% include 'partials/faq_items.html' %}
+  {% endwith %}
   <div class="text-center mt-3">
     <a href="{{ url_for('public.faq') }}" class="btn btn-outline-secondary">
       Всі питання
