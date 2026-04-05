@@ -70,12 +70,14 @@ class Order(db.Model):
     customer_name = db.Column(db.String(120))
     phone = db.Column(db.String(32))
     contact_method = db.Column(db.String(32))  # "phone", "viber", "telegram"
-    address = db.Column(db.String(255))
     comment = db.Column(db.Text)
     total_amount = db.Column(db.Float, default=0.0)
     status = db.Column(db.String(32), default="new")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     items = db.relationship("OrderItem", backref="order", cascade="all, delete-orphan")
+    delivery_type = db.Column(db.String(32))
+    np_city_name = db.Column(db.String(120))
+    np_warehouse = db.Column(db.String(255))
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)

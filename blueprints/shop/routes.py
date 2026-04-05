@@ -118,8 +118,10 @@ def checkout():
             customer_name=form.get("name"),
             phone=form.get("phone"),
             contact_method=form.get("contact_method"),
-            address=form.get("address"),
             comment=form.get("comment"),
+            delivery_type=form.get("delivery_type"),
+            np_city_name=form.get("np_city_name"),
+            np_warehouse=form.get("np_warehouse"),
             status="new",
         )
         db.session.add(order)
