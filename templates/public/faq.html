@@ -3,19 +3,6 @@
 {% block content %}
 <div class="container">
   <h1 class="h4 mb-3">Часті питання</h1>
-  <div class="accordion" id="faqAcc">
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="q1"><button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#a1">З чого зроблені свічки?</button></h2>
-      <div id="a1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-        <div class="accordion-body">Свічки виготовлені з якісного воску, безпечного для дому.</div>
-      </div>
-    </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="q2"><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#a2">Чи можна замовити нестандартні кольори?</button></h2>
-      <div id="a2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-        <div class="accordion-body">Так, у картці товару обирай доступні кольори; додаткові — за узгодженням.</div>
-      </div>
-    </div>
-  </div>
+  {% include 'partials/faq_items.html' %}
 </div>
 {% endblock %}

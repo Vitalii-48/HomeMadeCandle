@@ -137,6 +137,16 @@
   {% endif %}
 </section>
 
+<section class="container my-5">
+  <h2 class="display-5 mb-4 text-center">Часті питання</h2>
+  {% include 'partials/faq_items.html' %}
+  <div class="text-center mt-3">
+    <a href="{{ url_for('public.faq') }}" class="btn btn-outline-secondary">
+      Всі питання
+    </a>
+  </div>
+</section>
+
 <footer id="footer" class="bg-light text-dark py-5">
   <div class="container">
     <div class="row">
@@ -186,5 +196,6 @@
 
     </div>
   </div>
+
 </footer>
 {% endblock %}
