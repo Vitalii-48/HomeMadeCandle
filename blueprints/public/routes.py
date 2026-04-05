@@ -38,3 +38,8 @@ def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
     colors = [c.to_dict() for c in product.colors]
     return render_template("public/product_detail.html", product=product, colors=colors)
+
+# Політика конфіденційності
+@bp.route("/privacy")
+def privacy():
+    return render_template("public/privacy.html")
