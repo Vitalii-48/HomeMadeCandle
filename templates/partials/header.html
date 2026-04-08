@@ -1,48 +1,78 @@
 <!-- templates/partials/header.html -->
-<nav class="navbar navbar-expand-md navbar-light bg-light  shadow-sm">
+<nav class="navbar navbar-expand-md navbar-light bg-light shadow-sm">
   <div class="container">
+
     {% if request.blueprint in ["public", "shop"] %}
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavPublic">
+      <a class="navbar-brand" href="{{ url_for('public.index') }}">Shop HomeMadeCandle</a>
+
+      {# Бейдж кошика — кількість товарів у сесії #}
+      <a class="btn btn-outline-secondary btn-sm ms-auto me-2 d-md-none position-relative"
+         href="{{ url_for('shop.cart') }}">
+        🛒
+      </a>
+
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#mainNavPublic">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand" href="{{ url_for('public.index') }}">Shop HomeMadeCandle</a>
+
       <div id="mainNavPublic" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
-          <li class="nav-item"><a class="nav-link
-            {% if request.endpoint == 'public.index' %}active fw-bold{% endif %}"
-            href="{{ url_for('public.index') }}">Головна</a></li>
-          <li class="nav-item"><a class="nav-link
-            {% if request.endpoint == 'public.catalog' %}active fw-bold{% endif %}"
-            href="{{ url_for('public.catalog') }}">Каталог</a></li>
-          <li class="nav-item"><a class="nav-link
-            {% if request.endpoint == 'public.compositions' %}active fw-bold{% endif %}"
-            href="{{ url_for('public.compositions') }}">Композиції</a></li>
-          <li class="nav-item"><a class="nav-link
-            {% if request.endpoint == 'public.faq' %}active fw-bold{% endif %}"
-            href="{{ url_for('public.faq') }}">FAQ</a></li>
-          <li class="nav-item"><a class="nav-link
-            {% if request.endpoint == 'shop.cart' %}active fw-bold{% endif %}"
-            href="{{ url_for('shop.cart') }}">Кошик</a></li>
-          {% if request.endpoint == "public.index" %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.login') }}">Адмін панель</a></li>
-          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'public.index' %}active fw-bold{% endif %}"
+               href="{{ url_for('public.index') }}">Головна</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'public.catalog' %}active fw-bold{% endif %}"
+               href="{{ url_for('public.catalog') }}">Каталог</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'public.compositions' %}active fw-bold{% endif %}"
+               href="{{ url_for('public.compositions') }}">Композиції</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'public.faq' %}active fw-bold{% endif %}"
+               href="{{ url_for('public.faq') }}">FAQ</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'shop.cart' %}active fw-bold{% endif %}"
+               href="{{ url_for('shop.cart') }}">Кошик</a>
+          </li>
         </ul>
       </div>
 
     {% elif request.blueprint == "admin" %}
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavAdmin">
+      <a class="navbar-brand" href="{{ url_for('admin.admin_index') }}">Admin HomeMadeCandle</a>
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#mainNavAdmin">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand" href="{{ url_for('public.index') }}">Admin HomeMadeCandle</a>
       <div id="mainNavAdmin" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.admin_index') }}">Головна</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.product_list') }}">Товари</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.composition_list') }}">Композиції</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.order_list') }}">Замовлення</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.palette_list') }}">Палітра</a></li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.admin_index' %}active{% endif %}"
+               href="{{ url_for('admin.admin_index') }}">Головна</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.product_list' %}active{% endif %}"
+               href="{{ url_for('admin.product_list') }}">Товари</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.composition_list' %}active{% endif %}"
+               href="{{ url_for('admin.composition_list') }}">Композиції</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.order_list' %}active{% endif %}"
+               href="{{ url_for('admin.order_list') }}">Замовлення</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'admin.palette_list' %}active{% endif %}"
+               href="{{ url_for('admin.palette_list') }}">Палітра</a>
+          </li>
         </ul>
+        <a href="{{ url_for('admin.logout') }}" class="btn btn-outline-secondary btn-sm">Вийти</a>
       </div>
     {% endif %}
+
   </div>
 </nav>

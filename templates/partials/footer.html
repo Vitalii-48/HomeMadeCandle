@@ -1,8 +1,8 @@
 <!-- templates/partials/footer.html -->
 <footer class="bg-light border-top py-3 mt-4">
   <div class="container text-muted small">
-    © {{ 2026 }} HomeMadeCandle. Виготовлено з любов'ю.
+    © {{ now().year }} HomeMadeCandle. Виготовлено з любов'ю.
     <span class="mx-2">·</span>
-    <a href="/privacy" class="text-muted">Політика конфіденційності</a>
+    <a href="{{ url_for('public.privacy') }}" class="text-muted">Політика конфіденційності</a>
   </div>
 </footer>

@@ -1,5 +1,6 @@
 # blueprints/public/routes.py
 
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from flask import render_template
 from models import Product, Composition
@@ -10,14 +11,26 @@ from blueprints.public import bp
 @bp.route("/")
 def index():
     # Вибираємо всі активні композиції з БД, сортуємо за датою створення (новіші першими)
-    compositions = Composition.query.filter_by(is_active=True).order_by(Composition.created_at.desc()).all()
-    products = Product.query.filter_by(is_active=True).options(joinedload(Product.images)).all()
+    compositions = db.session.scalars(
+        select(Composition)
+        .where(Composition.is_active == True)
+        .order_by(Composition.created_at.desc())
+    ).all()
+    products = db.session.scalars(
+        select(Product)
+        .where(Product.is_active == True)
+        .options(joinedload(Product.images))
+    ).unique().all()
     return render_template("public/index.html", products=products, compositions=compositions)
 
 # Сторінка зі списком композицій
 @bp.route("/compositions")
 def compositions():
-    compositions = Composition.query.filter_by(is_active=True).order_by(Composition.created_at.desc()).all()
+    compositions = db.session.scalars(
+        select(Composition)
+        .where(Composition.is_active == True)
+        .order_by(Composition.created_at.desc())
+    ).all()
     return render_template("public/compositions.html", compositions=compositions)
 
 # Сторінка FAQ (часті питання)
@@ -28,7 +41,11 @@ def faq():
 # Каталог товарів
 @bp.route("/catalog")
 def catalog():
-    products = Product.query.filter_by(is_active=True).options(joinedload(Product.images), joinedload(Product.colors)).all()
+    products = db.session.scalars(
+        select(Product)
+        .where(Product.is_active == True)
+        .options(joinedload(Product.images), joinedload(Product.colors))
+    ).unique().all()
     for product in products:
         product.colors_list = [c.to_dict() for c in product.colors]
     return render_template("public/catalog.html", products=products)

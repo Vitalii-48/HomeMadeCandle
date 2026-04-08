@@ -1,3 +1,8 @@
+# services/nova_poshta/fake.py
+# Заглушка для локальної розробки без реального API Нової Пошти.
+# Щоб перейти на продакшен — змінити імпорт у __init__.py:
+#   from .real import search_cities, get_warehouses
+
 CITIES = [
     {"ref": "1", "name": "Вінниця"},
     {"ref": "2", "name": "Київ"},
@@ -8,7 +13,7 @@ CITIES = [
     {"ref": "7", "name": "Запоріжжя"},
 ]
 
-WAREHOUSES = {
+WAREHOUSES: dict[str, list] = {
     "1": [
         {"ref": "w101", "name": "Відділення №1: вул. Соборна, 32"},
         {"ref": "w102", "name": "Відділення №2: вул. Хмельницьке шосе, 1"},
@@ -41,9 +46,13 @@ WAREHOUSES = {
     ],
 }
 
+
 def search_cities(query: str) -> list:
+    """Пошук міста за підрядком (регістронезалежний)."""
     query = query.strip().lower()
     return [c for c in CITIES if query in c["name"].lower()]
 
+
 def get_warehouses(city_ref: str) -> list:
+    """Повертає список відділень для міста за його ref."""
     return WAREHOUSES.get(city_ref, [])
