@@ -1,47 +1,71 @@
 <!-- templates/public/compositions.html -->
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-  <h1 class="h4 mb-3">Композиції</h1>
-  <p class="text-muted">Надихайся прикладами: букети, подарункові набори і більше.</p>
-  <div class="row">
+
+<div class="container py-4">
+
+  <h1 class="display-5 mb-2">Композиції</h1>
+  <p class="text-muted mb-4">Надихайся прикладами: букети, подарункові набори і більше.</p>
+
+  <!-- ===== СІТКА КОМПОЗИЦІЙ ===== -->
+  <!-- col-12 на мобільних (1 в ряд), col-md-6 (2 в ряд), col-lg-4 (3 в ряд) -->
+  <div class="row g-4">
     {% for comp in compositions %}
-      <div class="col-12 col-md-6 col-lg-4 mb-4">
-        <div class="card h-100">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+
+          <!-- Зображення композиції -->
           {% if comp.image %}
-          <img src="{{ get_image_url(comp.image) }}" class="card-img-top img-fluid" alt="{{ comp.title }}" class="card-img-top img-fluid" alt="{{ comp.title }}">
+          <img src="{{ get_image_url(comp.image) }}"
+               class="card-img-top img-fluid"
+               alt="{{ comp.title }}"
+               style="object-fit: cover; aspect-ratio: 4/3;">
           {% endif %}
 
-          <div class="card-body">
+          <div class="card-body d-flex flex-column">
             <h5 class="card-title">{{ comp.title }}</h5>
-            <p class="card-text">{{ comp.description }}</p>
-            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-              <p class="card-price mb-0 fw-bold">Ціна {{ comp.price }} грн</p>
-              <button type="button" class="btn btn-sm btn-success" onclick="addComposition({{ comp.id }})">
+            <p class="card-text text-muted flex-grow-1">{{ comp.description }}</p>
+
+            <!-- Ціна + кнопка додавання до кошика -->
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
+              <p class="card-price mb-0 fw-bold">{{ comp.price }} грн</p>
+              <button type="button"
+                      class="btn btn-sm btn-success"
+                      onclick="addComposition({{ comp.id }})">
                 Додати до кошика
               </button>
             </div>
           </div>
+
         </div>
       </div>
     {% else %}
-      <p>Наразі немає композицій.</p>
+      <!-- Порожній список композицій -->
+      <div class="col-12 text-center py-5">
+        <p class="text-muted mb-3">Наразі немає композицій.</p>
+        <a href="{{ url_for('public.index') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i> На головну
+        </a>
+      </div>
     {% endfor %}
   </div>
+
 </div>
 
 <script>
-function addComposition(id) {
-  fetch("{{ url_for('shop.cart_add') }}", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ composition_id: id, quantity: 1 })
-  }).then(res => {
-    if (res.ok) {
-      location.href = "{{ url_for('shop.cart') }}";
-    }
-  });
-}
+  // Додавання композиції до кошика через API
+  function addComposition(id) {
+    fetch("{{ url_for('shop.cart_add') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ composition_id: id, quantity: 1 })
+    }).then(res => {
+      if (res.ok) {
+        // Перехід до кошика після успішного додавання
+        location.href = "{{ url_for('shop.cart') }}";
+      }
+    });
+  }
 </script>
 
 {% endblock %}

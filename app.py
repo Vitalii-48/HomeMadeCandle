@@ -1,4 +1,6 @@
 # app.py
+# Точка входу Flask-застосунку. Використовує фабричний патерн create_app()
+# для гнучкої конфігурації та спрощення тестування.
 
 from flask import Flask
 from config import Config
@@ -9,33 +11,66 @@ from blueprints.admin import bp as admin_bp
 from services.images import get_image_url
 
 
+def create_app(config_class=Config):
+    """
+    Фабрична функція для створення Flask-застосунку.
 
-def create_app():
-    # 1. Створення Flask-застосунку
+    Патерн Application Factory дозволяє:
+    - створювати кілька екземплярів застосунку (наприклад, для тестів);
+    - легко підміняти конфігурацію (Config / TestingConfig / ProductionConfig).
+
+    Args:
+        config_class: клас конфігурації (за замовчуванням Config).
+
+    Returns:
+        app (Flask): сконфігурований екземпляр Flask-застосунку.
+    """
     app = Flask(__name__, static_folder="static", template_folder="templates")
+    app.config.from_object(config_class)
 
-    # 2. Завантаження конфігурації
-    app.config.from_object(Config)
+    _register_extensions(app)
+    _register_blueprints(app)
+    _register_jinja_globals(app)
+    _register_routes(app)
 
-    # 3. Ініціалізація розширень
+    return app
+
+
+def _register_extensions(app):
+    """Ініціалізація Flask-розширень (db, migrate, login_manager)."""
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-    app.jinja_env.globals["get_image_url"] = get_image_url
 
-    # 4. Реєстрація Blueprints (модульна архітектура)
+
+def _register_blueprints(app):
+    """Реєстрація Blueprint-модулів (публічна частина, магазин, адмінка)."""
     app.register_blueprint(public_bp)
     app.register_blueprint(shop_bp)
     app.register_blueprint(admin_bp)
 
-    # 5. Health-check endpoint (перевірка стану сервера)
+
+def _register_jinja_globals(app):
+    """Реєстрація глобальних функцій/змінних, доступних у всіх Jinja2-шаблонах."""
+    app.jinja_env.globals["get_image_url"] = get_image_url
+
+
+def _register_routes(app):
+    """Реєстрація службових маршрутів застосунку."""
+
     @app.route("/health")
     def health():
+        """
+        Health-check endpoint.
+        Використовується балансувальником навантаження або моніторингом
+        для перевірки доступності сервера.
+        """
         return "OK", 200
 
-    return app
-# Запуск застосунку
+
+# Глобальна змінна `app` потрібна для Gunicorn (Procfile: gunicorn "app:create_app()")
 app = create_app()
 
 if __name__ == "__main__":
+    # Локальний запуск для розробки. У продакшені використовується Gunicorn.
     app.run(debug=True)

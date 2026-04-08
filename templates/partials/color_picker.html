@@ -7,7 +7,7 @@
            name="color-{{ product.id }}"
            id="color-{{ product.id }}-{{ c.id }}"
            value="{{ c.id }}"
-           {% if loop.first %}checked{% endif %}>
+           {% if c.is_default or (loop.first and not colors|selectattr("is_default")|list) %}checked{% endif %}>
 
     <label class="d-flex flex-column align-items-center color-swatch" for="color-{{ product.id }}-{{ c.id }}">
       <!-- Кружечок з кольором -->

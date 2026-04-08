@@ -1,214 +1,138 @@
 <!-- templates/shop/checkout.html -->
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-    <h1 class="h4 mb-3">Оформлення замовлення</h1>
 
-    {% if error %}
+<div class="container py-4">
+  <h1 class="h4 mb-4">Оформлення замовлення</h1>
+
+  <!-- Повідомлення про помилку (наприклад, не підтверджено телефон) -->
+  {% if error %}
     <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+  {% endif %}
 
-    <form method="post" class="row g-3">
+  <!-- action явно вказано, щоб POST гарантовано йшов на цей же маршрут -->
+  <form method="post" action="{{ url_for('shop.checkout') }}" class="row g-3">
+
+    <!-- Ім'я покупця -->
+    <div class="col-12 col-md-6">
+      <label class="form-label">Ім'я</label>
+      <input name="name" class="form-control" required>
+    </div>
+
+    <!-- ===== ТЕЛЕФОН + OTP ВЕРИФІКАЦІЯ ===== -->
+    <div class="col-12 col-md-6">
+      <label class="form-label">Телефон</label>
+      <div class="input-group">
+        <input name="phone" id="phone" type="tel" class="form-control" required>
+        <button class="btn btn-outline-secondary" type="button" id="send-code-btn">
+          Отримати код
+        </button>
+      </div>
+    </div>
+
+    <!-- Поле для OTP (ховається до натискання "Отримати код") -->
+    <div class="col-12 col-md-6" id="code-section" style="display:none">
+      <label class="form-label">Код підтвердження</label>
+      <div class="input-group">
+        <input type="text" id="code-input" class="form-control"
+               placeholder="Введіть 4-значний код" maxlength="4">
+        <button class="btn btn-outline-primary" type="button" id="verify-btn">
+          Підтвердити
+        </button>
+      </div>
+      <!-- Успішна верифікація -->
+      <div id="verified-msg" class="text-success mt-1" style="display:none">
+        ✅ Номер підтверджено
+      </div>
+      <!-- Помилка верифікації -->
+      <div id="error-msg" class="text-danger mt-1" style="display:none"></div>
+    </div>
+
+    <!-- Спосіб зв'язку після замовлення -->
+    <div class="col-12 col-md-6">
+      <label class="form-label">Спосіб зв'язку</label>
+      <select name="contact_method" class="form-select" required>
+        <option value="phone" selected>Телефон</option>
+        <option value="viber">Viber</option>
+        <option value="telegram">Telegram</option>
+      </select>
+    </div>
+
+    <!-- ===== СПОСІБ ДОСТАВКИ ===== -->
+    <div class="col-12">
+      <label class="form-label">Спосіб доставки</label>
+      <div class="d-flex gap-3">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="delivery_type"
+                 id="delivery-np" value="nova_poshta" checked>
+          <label class="form-check-label" for="delivery-np">Нова Пошта</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="delivery_type"
+                 id="delivery-pickup" value="pickup">
+          <label class="form-check-label" for="delivery-pickup">Самовивіз</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ПОЛЯ НОВОЇ ПОШТИ (ховаються при самовивозі) ===== -->
+    <div class="col-12" id="np-section">
+      <div class="row g-2">
+
+        <!-- Пошук міста (з автопідказками) -->
         <div class="col-12 col-md-6">
-            <label class="form-label">Ім'я</label>
-            <input name="name" class="form-control" required>
+          <label class="form-label">Місто</label>
+          <input type="text" id="np-city-input" class="form-control"
+                 placeholder="Введіть місто..." autocomplete="off">
+          <!-- Приховані поля для передачі ref і назви міста у POST-форму -->
+          <input type="hidden" name="np_city_ref"  id="np-city-ref">
+          <input type="hidden" name="np_city_name" id="np-city-name">
+          <!-- Список підказок (заповнюється JS) -->
+          <div id="city-suggestions" class="list-group mt-1" style="display:none"></div>
         </div>
 
-        <!-- Телефон + верифікація -->
+        <!-- Вибір відділення (стає активним після вибору міста) -->
         <div class="col-12 col-md-6">
-            <label class="form-label">Телефон</label>
-            <div class="input-group">
-                <input name="phone" id="phone" type="tel" class="form-control" required>
-                <button class="btn btn-outline-secondary" type="button" id="send-code-btn">
-                    Отримати код
-                </button>
-            </div>
+          <label class="form-label">Відділення</label>
+          <select name="np_warehouse" id="np-warehouse" class="form-select" disabled>
+            <option value="">Спочатку оберіть місто</option>
+          </select>
         </div>
 
-        <!-- Поле для коду (приховане поки не натиснули "Отримати код") -->
-        <div class="col-12 col-md-6" id="code-section" style="display:none">
-            <label class="form-label">Код підтвердження</label>
-            <div class="input-group">
-                <input type="text" id="code-input" class="form-control"
-                       placeholder="Введіть 4-значний код" maxlength="4">
-                <button class="btn btn-outline-primary" type="button" id="verify-btn">
-                    Підтвердити
-                </button>
-            </div>
-            <div id="verified-msg" class="text-success mt-1" style="display:none">
-                ✅ Номер підтверджено
-            </div>
-            <div id="error-msg" class="text-danger mt-1" style="display:none"></div>
-        </div>
+      </div>
+    </div>
 
-        <div class="col-12 col-md-6">
-            <label class="form-label">Спосіб зв'язку</label>
-            <select name="contact_method" class="form-select" required>
-                <option value="phone" selected>Телефон</option>
-                <option value="viber">Viber</option>
-                <option value="telegram">Telegram</option>
-            </select>
-        </div>
-        <!-- Спосіб доставки -->
-        <div class="col-12">
-            <label class="form-label">Спосіб доставки</label>
-            <div class="d-flex gap-3">
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="delivery_type"
-                           id="delivery-np" value="nova_poshta" checked>
-                    <label class="form-check-label" for="delivery-np">Нова Пошта</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="delivery_type"
-                           id="delivery-pickup" value="pickup">
-                    <label class="form-check-label" for="delivery-pickup">Самовивіз</label>
-                </div>
-            </div>
-        </div>
+    <!-- Коментар до замовлення -->
+    <div class="col-12">
+      <label class="form-label">Коментар</label>
+      <textarea name="comment" class="form-control" rows="3"
+                placeholder="Додаткові побажання щодо замовлення або доставки"></textarea>
+    </div>
 
-        <!-- Поля Нової Пошти (ховаються при самовивозі) -->
-        <div class="col-12" id="np-section">
-            <div class="row g-2">
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Місто</label>
-                    <input type="text" id="np-city-input" class="form-control"
-                           placeholder="Введіть місто..." autocomplete="off">
-                    <input type="hidden" name="np_city_ref" id="np-city-ref">
-                    <input type="hidden" name="np_city_name" id="np-city-name">
-                    <div id="city-suggestions" class="list-group mt-1" style="display:none"></div>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="form-label">Відділення</label>
-                    <select name="np_warehouse" id="np-warehouse" class="form-select" disabled>
-                        <option value="">Спочатку оберіть місто</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="col-12">
-            <label class="form-label">Коментар</label>
-            <textarea name="comment" class="form-control" rows="3"
-                      placeholder="Композиція або спосіб доставки"></textarea>
-        </div>
-        <div class="col-12">
-            <button class="btn btn-primary" type="submit" id="submit-btn" disabled>
-                Підтвердити замовлення
-            </button>
-            <a class="btn btn-outline-secondary" href="{{ url_for('shop.cart') }}">
-                Повернутися до кошика
-            </a>
-        </div>
-    </form>
+    <!-- Кнопки: submit (заблокований до верифікації) та повернення до кошика -->
+    <div class="col-12 d-flex gap-2 flex-wrap">
+      <button class="btn btn-primary" type="submit" id="submit-btn" disabled>
+        Підтвердити замовлення
+      </button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('shop.cart') }}">
+        Повернутися до кошика
+      </a>
+    </div>
+
+  </form>
 </div>
 
-<script>
-    // Відправити код
-    document.getElementById("send-code-btn").addEventListener("click", async () => {
-      const phone = document.getElementById("phone").value.trim();
-      if (!phone) {
-        alert("Введіть номер телефону");
-        return;
-      }
+<!-- Передаємо всі Flask URL у JS через data-атрибути одного прихованого div -->
+<div id="api-urls"
+     data-send-url="{{ url_for('shop.send_verification') }}"
+     data-check-url="{{ url_for('shop.check_verification') }}"
+     data-cities-url="{{ url_for('shop.np_cities') }}"
+     data-warehouses-url="{{ url_for('shop.np_warehouses') }}"
+     style="display:none">
+</div>
 
-      const res = await fetch("/verify/send", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ phone })
-      });
-      const data = await res.json();
+{% endblock %}
 
-      if (data.ok) {
-        document.getElementById("code-section").style.display = "block";
-        // ЕМУЛЯЦІЯ: показуємо код
-        alert(`Ваш код: ${data.demo_code}`);
-      } else {
-        alert(data.error || "Помилка");
-      }
-    });
-
-    // Перевірити код
-    document.getElementById("verify-btn").addEventListener("click", async () => {
-      const phone = document.getElementById("phone").value.trim();
-      const code = document.getElementById("code-input").value.trim();
-      const errorMsg = document.getElementById("error-msg");
-
-      const res = await fetch("/verify/check", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ phone, code })
-      });
-      const data = await res.json();
-
-      if (data.ok) {
-        document.getElementById("verified-msg").style.display = "block";
-        document.getElementById("error-msg").style.display = "none";
-        document.getElementById("submit-btn").disabled = false;
-        document.getElementById("code-section").querySelector("button").disabled = true;
-      } else {
-        errorMsg.textContent = data.error || "Невірний код";
-        errorMsg.style.display = "block";
-      }
-    });
-
-    // Перемикання способу доставки
-    document.querySelectorAll('input[name="delivery_type"]').forEach(radio => {
-      radio.addEventListener("change", () => {
-        document.getElementById("np-section").style.display =
-          radio.value === "nova_poshta" ? "block" : "none";
-      });
-    });
-
-    // Пошук міст
-    let cityTimeout;
-    document.getElementById("np-city-input").addEventListener("input", function() {
-      clearTimeout(cityTimeout);
-      const q = this.value.trim();
-      if (q.length < 2) {
-        document.getElementById("city-suggestions").style.display = "none";
-        return;
-      }
-      cityTimeout = setTimeout(async () => {
-        const res = await fetch(`/nova-poshta/cities?q=${encodeURIComponent(q)}`);
-        const cities = await res.json();
-        const box = document.getElementById("city-suggestions");
-        box.innerHTML = "";
-        if (cities.length === 0) {
-          box.style.display = "none";
-          return;
-        }
-        cities.forEach(city => {
-          const item = document.createElement("a");
-          item.className = "list-group-item list-group-item-action";
-          item.textContent = city.name;
-          item.href = "#";
-          item.addEventListener("click", e => {
-            e.preventDefault();
-            document.getElementById("np-city-input").value = city.name;
-            document.getElementById("np-city-ref").value = city.ref;
-            document.getElementById("np-city-name").value = city.name;
-            box.style.display = "none";
-            loadWarehouses(city.ref);
-          });
-          box.appendChild(item);
-        });
-        box.style.display = "block";
-      }, 300);
-    });
-
-    // Завантаження відділень
-    async function loadWarehouses(cityRef) {
-      const res = await fetch(`/nova-poshta/warehouses?city_ref=${cityRef}`);
-      const warehouses = await res.json();
-      const select = document.getElementById("np-warehouse");
-      select.innerHTML = "";
-      select.disabled = false;
-      warehouses.forEach(w => {
-        const opt = document.createElement("option");
-        opt.value = w.ref;
-        opt.textContent = w.name;
-        select.appendChild(opt);
-      });
-    }
-
-</script>
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/shop/checkout.js') }}"></script>
 {% endblock %}

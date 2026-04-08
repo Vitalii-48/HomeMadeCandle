@@ -1,51 +1,70 @@
 <!-- templates/public/product_detail.html -->
-
 {% extends "base.html" %}
 {% block content %}
+
 <div class="container py-4">
-  <div class="row">
+
+  <!-- Кнопка повернення до каталогу -->
+  <a href="{{ url_for('public.catalog') }}" class="btn btn-outline-secondary mb-3">
+    <i class="bi bi-arrow-left me-1"></i> До каталогу
+  </a>
+
+  <div class="row g-4">
+
+    <!-- ===== ЛІВА КОЛОНКА: КАРУСЕЛЬ ЗОБРАЖЕНЬ ===== -->
     <div class="col-12 col-md-6">
       <div id="carousel{{ product.id }}" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
           {% for img in product.images %}
             <div class="carousel-item {% if loop.first %}active{% endif %}">
-              <img src="{{ get_image_url(img.filename) }}" class="d-block w-100 img-fluid" alt="{{ img.alt_text or product.name }}">
+              <!-- Обмеження висоти на мобільних: max-height адаптується -->
+              <img src="{{ get_image_url(img.filename) }}"
+                   class="d-block w-100 img-fluid rounded"
+                   alt="{{ img.alt_text or product.name }}"
+                   style="object-fit: cover; max-height: 420px;">
             </div>
           {% endfor %}
         </div>
+
+        <!-- Стрілки — тільки якщо більше 1 зображення -->
         {% if product.images|length > 1 %}
-        <button class="carousel-control-prev" type="button" data-bs-target="#carousel{{ product.id }}" data-bs-slide="prev">
+        <button class="carousel-control-prev" type="button"
+                data-bs-target="#carousel{{ product.id }}" data-bs-slide="prev">
           <span class="carousel-control-prev-icon"></span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carousel{{ product.id }}" data-bs-slide="next">
+        <button class="carousel-control-next" type="button"
+                data-bs-target="#carousel{{ product.id }}" data-bs-slide="next">
           <span class="carousel-control-next-icon"></span>
         </button>
         {% endif %}
       </div>
     </div>
 
+    <!-- ===== ПРАВА КОЛОНКА: ІНФОРМАЦІЯ ПРО ТОВАР ===== -->
     <div class="col-12 col-md-6">
       <h1 class="h4 mb-3">{{ product.name }}</h1>
       <p class="text-muted">{{ product.description }}</p>
 
-      <div class="mb-2 small text-muted">
-        Віск: {{ product.wax_type }}
-      </div>
-      <div class="mb-2 small text-muted">
-        Категорія: {{ product.category }}
-      </div>
-      <div class="mb-2 small text-muted">
-        Розміри: д ({{ product.length|int }} мм) X ш ({{ product.width|int }} мм) X в ({{ product.height|int }} мм)
-      </div>
-      <div class="mb-2 small text-muted">
-        Вага: {{ product.weight|int }} г
-      </div>
+      <!-- Характеристики товару -->
+      <ul class="list-unstyled small text-muted mb-3">
+        <li><strong>Віск:</strong> {{ product.wax_type }}</li>
+        <li><strong>Категорія:</strong> {{ product.category }}</li>
+        <li>
+          <strong>Розміри:</strong>
+          д {{ product.length|int }} мм × ш {{ product.width|int }} мм × в {{ product.height|int }} мм
+        </li>
+        <li><strong>Вага:</strong> {{ product.weight|int }} г</li>
+      </ul>
+
+      <!-- Вибір кольору (підключається окремий partial) -->
       <div class="mb-3">
-        <label class="form-label">Колір</label>
+        <label class="form-label fw-semibold">Колір</label>
+        {% include "partials/color_picker.html" %}
       </div>
-      {% include "partials/color_picker.html" %}
+
+      <!-- Вибір кількості -->
       <div class="mb-3">
-        <label class="form-label">Кількість</label>
+        <label class="form-label fw-semibold">Кількість</label>
         <div class="input-group" style="max-width: 120px;">
           <button class="btn btn-outline-secondary" type="button" id="qty-minus">−</button>
           <input type="number" class="form-control text-center" id="qty" value="1" min="1">
@@ -53,49 +72,29 @@
         </div>
       </div>
 
+      <!-- Прихований блок з даними товару для JS (id, базова ціна, масив кольорів) -->
       <div id="product-data"
-        data-id="{{ product.id }}"
-        data-price="{{ product.price|int }}"
-        data-colors='{{ colors|tojson|safe }}'> <!-- використав одинарні лапки, бо путає -->
+           data-id="{{ product.id }}"
+           data-price="{{ product.price|int }}"
+           data-colors='{{ colors|tojson|safe }}'
+           data-cart-add-url="{{ url_for('shop.cart_add') }}"
+           data-cart-url="{{ url_for('shop.cart') }}">
       </div>
 
+      <!-- Динамічна ціна (оновлюється при зміні кольору) -->
       <div class="mb-3">
-        <div id="price-display" class="fw-semibold">Ціна: {{ product.price|int }} грн.</div>
+        <div id="price-display" class="fw-semibold fs-5">Ціна: {{ product.price|int }} грн.</div>
       </div>
 
-      <button class="btn btn-primary" id="add-to-cart">Додати в кошик</button>
+      <button class="btn btn-primary btn-lg w-100 w-md-auto" id="add-to-cart">
+        Додати в кошик
+      </button>
     </div>
+
   </div>
 </div>
-<script>
-  const qty = document.getElementById('qty');
-  document.getElementById('qty-minus').onclick = () => qty.value = Math.max(1, parseInt(qty.value)-1);
-  document.getElementById('qty-plus').onclick  = () => qty.value = parseInt(qty.value)+1;
 
-  // Оновлення ціни при зміні кольору (+10% якщо не білий)
-  const colorInputs = document.querySelectorAll('input[name="color-{{ product.id }}"]');
-  const priceEl = document.getElementById('price-display');
-  const productData = document.getElementById('product-data');
-  const productId = parseInt(productData.dataset.id);
-  const priceBase = parseInt(productData.dataset.price);
+<!-- Підключаємо винесений JS -->
+<script src="{{ url_for('static', filename='js/public/product_detail.js') }}"></script>
 
-  function updatePrice() {
-    const selectedId = document.querySelector('input[name="color-{{ product.id }}"]:checked').value;
-    const colors = JSON.parse(productData.dataset.colors);
-
-    const found = colors.find(c => c.id == selectedId);
-    const modifier = found ? (found.price_modifier || 0) : 0;
-    const price = Math.round(priceBase * (1 + modifier/100));
-    priceEl.textContent = `Ціна: ${price} грн.`;
-  }
-  colorInputs.forEach(el => el.addEventListener('change', updatePrice));
-  updatePrice();
-
-  document.getElementById('add-to-cart').onclick = async () => {
-    const colorId = parseInt(document.querySelector('input[name="color-{{ product.id }}"]:checked').value);
-    const payload = { product_id:  productId, color_id: colorId, quantity: parseInt(qty.value) };
-    const res = await fetch("/cart/add", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (res.ok) { window.location.href = "/cart"; }
-  };
-</script>
 {% endblock %}

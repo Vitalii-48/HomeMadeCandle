@@ -3,6 +3,7 @@
 from sqlalchemy.orm import joinedload
 from flask import render_template
 from models import Product, Composition
+from extensions import db
 from blueprints.public import bp
 
 # Головна сторінка сайту
@@ -27,7 +28,7 @@ def faq():
 # Каталог товарів
 @bp.route("/catalog")
 def catalog():
-    products = Product.query.filter_by(is_active=True).options(joinedload(Product.images)).all()
+    products = Product.query.filter_by(is_active=True).options(joinedload(Product.images), joinedload(Product.colors)).all()
     for product in products:
         product.colors_list = [c.to_dict() for c in product.colors]
     return render_template("public/catalog.html", products=products)
@@ -35,7 +36,7 @@ def catalog():
 # Детальна сторінка товару
 @bp.route("/product/<int:product_id>")
 def product_detail(product_id):
-    product = Product.query.get_or_404(product_id)
+    product = db.get_or_404(Product, product_id)
     colors = [c.to_dict() for c in product.colors]
     return render_template("public/product_detail.html", product=product, colors=colors)
 

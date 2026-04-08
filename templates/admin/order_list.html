@@ -10,12 +10,54 @@
           <div>
             <div class="fw-semibold">#{{ o.id }} • {{ o.customer_name }}</div>
             <div class="small text-muted">{{ o.contact_method }}: {{ o.phone }}</div>
-            <div class="small text-muted">Статус: {{ o.status }}</div>
+            <div class="small text-muted">
+              Статус:
+              {% if o.status == "sent" %}
+                <span class="badge bg-success">Відправлене</span>
+              {% elif o.status == "new" %}
+                <span class="badge bg-warning">Нове</span>
+              {% else %}
+                {{ o.status }}
+              {% endif %}
+            </div>
+            <div class="small text-muted">
+              Доставка: {{ o.delivery_type }}<br>
+              {{ o.np_city_name }}, {{ o.np_warehouse }}
+            </div>
           </div>
           <div class="text-end">
             <div>Сума: {{ "%.2f"|format(o.total_amount) }}</div>
-            <div class="small text-muted">{{ o.created_at }}</div>
+            <div class="small text-muted">{{ o.created_at.strftime("%Y-%m-%d %H:%M") }}</div>
           </div>
+        </div>
+        <!-- Список позицій -->
+        <ul class="mt-2">
+
+          {% for item in o.items %}
+            <li>
+              {% if item.product_id %}
+                Товар #{{ item.product_id }},  ({{ item.quantity }} шт × {{ item.unit_price }} грн)
+              {% elif item.composition_id %}
+                Композиція #{{ item.composition_id }} ({{ item.quantity }} шт × {{ item.unit_price }} грн)
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+
+        <!-- Кнопки керування -->
+        <div class="mt-2 d-flex gap-2">
+          <!-- Зміна статусу -->
+          {% if o.status != "sent" %}
+            <form method="post" action="{{ url_for('admin.order_mark_sent', order_id=o.id) }}">
+              <button type="submit" class="btn btn-sm btn-primary">Відправити</button>
+            </form>
+          {% endif %}
+
+          <!-- Видалення -->
+          <form method="post" action="{{ url_for('admin.order_delete', order_id=o.id) }}"
+                onsubmit="return confirm('Видалити замовлення #{{ o.id }}?');">
+            <button type="submit" class="btn btn-sm btn-danger">Видалити</button>
+          </form>
         </div>
       </div>
     {% else %}

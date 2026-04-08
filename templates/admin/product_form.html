@@ -1,3 +1,4 @@
+<!-- templates/admin/product_form.html -->
 {% extends "base.html" %}
 {% block content %}
 
@@ -5,10 +6,17 @@
 {% macro back_button() %}
   <div class="col-12 mt-2 d-flex justify-content-start">
     <a href="{{ url_for('admin.product_list') }}" class="btn btn-secondary">
-    Повернутися до списку товарів
+      Повернутися до списку товарів
     </a>
   </div>
 {% endmacro %}
+
+<!-- Передаємо URL для JS через data-атрибути (щоб JS можна було винести у статичний файл) -->
+<div id="admin-config"
+     data-color-delete-url="{{ url_for('admin.color_delete', color_id=0) }}"
+     data-image-delete-url="{{ url_for('admin.image_delete', image_id=0) }}"
+     data-images-reorder-url="{{ url_for('admin.images_reorder') }}"
+     style="display:none"></div>
 
 <div class="container py-4">
   {{ back_button() }}
@@ -20,18 +28,20 @@
         enctype="multipart/form-data"
         class="row g-3">
 
-    <!-- Основні поля товару -->
+    <!-- ===== ОСНОВНІ ПОЛЯ ТОВАРУ ===== -->
     <div class="col-md-4">
       <label class="form-label">SKU</label>
-      <input name="sku" class="form-control {% if not product %}highlight-sku{% endif %}"
-            value="{{ product.sku if product else suggested_sku }}" required>
+      <input name="sku"
+             class="form-control {% if not product %}highlight-sku{% endif %}"
+             value="{{ product.sku if product else suggested_sku }}" required>
       {% if not product %}
         <small class="form-text text-muted">Запропоновано вільний номер SKU</small>
       {% endif %}
     </div>
     <div class="col-md-8">
       <label class="form-label">Назва</label>
-      <input name="name" class="form-control" value="{{ product.name if product else '' }}" required>
+      <input name="name" class="form-control"
+             value="{{ product.name if product else '' }}" required>
     </div>
     <div class="col-12">
       <label class="form-label">Опис</label>
@@ -39,39 +49,46 @@
     </div>
     <div class="col-md-4">
       <label class="form-label">Ціна</label>
-      <input name="price" type="number" step="0.01" class="form-control" value="{{ product.price|int if product else '0' }}">
+      <input name="price" type="number" step="0.01" class="form-control"
+             value="{{ product.price|int if product else '0' }}">
     </div>
 
-    <!-- Характеристики свічки -->
+    <!-- ===== ХАРАКТЕРИСТИКИ СВІЧКИ ===== -->
     <hr class="my-4">
     <h5>Характеристики свічки</h5>
 
     <div class="col-md-4">
       <label class="form-label">Тип воску</label>
-      <input name="wax_type" class="form-control" value="{{ product.wax_type if product else '' }}">
+      <input name="wax_type" class="form-control"
+             value="{{ product.wax_type if product else '' }}">
     </div>
     <div class="col-md-4">
       <label class="form-label">Категорія</label>
-      <input name="category" class="form-control" value="{{ product.category if product else '' }}">
+      <input name="category" class="form-control"
+             value="{{ product.category if product else '' }}">
     </div>
     <div class="col-md-4">
       <label class="form-label">Довжина (мм)</label>
-      <input name="length" type="number" step="1" min="0" class="form-control" value="{{ product.length|int if product else '0' }}">
+      <input name="length" type="number" step="1" min="0" class="form-control"
+             value="{{ product.length|int if product else '0' }}">
     </div>
     <div class="col-md-4">
       <label class="form-label">Ширина (мм)</label>
-      <input name="width" type="number" step="1" min="0" class="form-control" value="{{ product.width|int if product else '0' }}">
+      <input name="width" type="number" step="1" min="0" class="form-control"
+             value="{{ product.width|int if product else '0' }}">
     </div>
     <div class="col-md-4">
       <label class="form-label">Висота (мм)</label>
-      <input name="height" type="number" step="1" min="0" class="form-control" value="{{ product.height|int if product else '0' }}">
+      <input name="height" type="number" step="1" min="0" class="form-control"
+             value="{{ product.height|int if product else '0' }}">
     </div>
     <div class="col-md-4">
       <label class="form-label">Вага (г)</label>
-      <input name="weight" type="number" step="1" min="0" class="form-control" value="{{ product.weight|int if product else '0' }}">
+      <input name="weight" type="number" step="1" min="0" class="form-control"
+             value="{{ product.weight|int if product else '0' }}">
     </div>
 
-    <!-- Кольори товару -->
+    <!-- ===== КОЛЬОРИ ТОВАРУ ===== -->
     <hr class="my-4">
     <h5>Кольори</h5>
     <div id="color-fields">
@@ -79,30 +96,37 @@
       <div class="row g-2 mb-2 color-row">
         <input type="hidden" name="color_id[]" value="{{ color.id }}">
         <div class="col-5">
-          <input name="color_name[]" class="form-control form-control-sm" value="{{ color.color_name }}">
+          <input name="color_name[]" class="form-control form-control-sm"
+                 value="{{ color.color_name }}">
         </div>
         <div class="col-3">
-          <input name="color_hex[]" type="color" class="form-control form-control-color w-100" value="{{ color.color_hex }}">
+          <input name="color_hex[]" type="color"
+                 class="form-control form-control-color w-100"
+                 value="{{ color.color_hex }}">
         </div>
         <div class="col-3">
           <div class="input-group input-group-sm">
             <input type="number" min="0" max="100"
-                name="color_modifier_{{ loop.index0 }}"
-                class="form-control form-control-sm"
-                value="{{ color.price_modifier|int if color.price_modifier else 0 }}">
+                   name="color_modifier_{{ loop.index0 }}"
+                   class="form-control form-control-sm"
+                   value="{{ color.price_modifier|int if color.price_modifier else 0 }}">
             <span class="input-group-text">%</span>
           </div>
         </div>
         <div class="col-2">
+          <!-- onclick викликає функцію з product_form.js -->
           <button type="button" class="btn btn-sm btn-outline-danger w-100"
-                  onclick="apiDelete('color', '{{ color.id }}', this)">Видалити</button>
+                  onclick="apiDelete('color', '{{ color.id }}', this)">
+            Видалити
+          </button>
         </div>
       </div>
       {% endfor %}
     </div>
-    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addColorRow()">+ Колір</button>
+    <button type="button" class="btn btn-sm btn-outline-primary"
+            onclick="addColorRow()">+ Колір</button>
 
-    <!-- Зображення товару -->
+    <!-- ===== ЗОБРАЖЕННЯ ТОВАРУ ===== -->
     <hr class="my-4">
     <h5>Зображення</h5>
 
@@ -114,24 +138,25 @@
         <div class="position-relative text-center" style="cursor:grab;">
           <img src="{{ get_image_url(img.preview_filename or img.filename) }}"
                class="img-thumbnail w-100"
-               style="height:120px;object-fit:cover;">
+               style="height:120px; object-fit:cover;">
           {% if loop.first %}
             <span class="position-absolute top-0 start-0 m-1 badge text-bg-primary"
                   style="font-size:10px;">Головне</span>
           {% endif %}
+          <!-- onclick викликає apiDelete з product_form.js -->
           <button type="button"
                   class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-1"
-                  style="width:24px;height:24px;padding:0;line-height:1;"
+                  style="width:24px; height:24px; padding:0; line-height:1;"
                   onclick="apiDelete('image', '{{ img.id }}', this)">&times;</button>
         </div>
       </div>
       {% else %}
-      <p class="text-muted">Немає фото.</p>
+        <p class="text-muted">Немає фото.</p>
       {% endfor %}
     </div>
     {% endif %}
 
-    {# Зона завантаження нових фото — для нового і існуючого товару #}
+    {# Drop-зона для завантаження нових фото #}
     <input type="file" name="images[]" id="file-input"
            accept=".jpg,.jpeg,.png,.webp" multiple class="d-none">
 
@@ -145,19 +170,19 @@
         <polyline points="17 8 12 3 7 8"/>
         <line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
-      <p class="mb-1 text-muted">Перетягніть фото сюди або
+      <p class="mb-1 text-muted">
+        Перетягніть фото сюди або
         <span class="text-primary" style="text-decoration:underline;">виберіть файли</span>
       </p>
-      {% if product %}
-      <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Перше стане головним.</p>
-      {% else %}
-      <p class="small text-muted mb-0">JPG, PNG, WEBP — можна кілька. Фото збережуться разом з товаром.</p>
-      {% endif %}
-      {# Прев'ю нових фото перед збереженням #}
+      <p class="small text-muted mb-0">
+        JPG, PNG, WEBP — можна кілька.
+        {% if product %}Перше стане головним.{% else %}Фото збережуться разом з товаром.{% endif %}
+      </p>
+      {# Прев'ю нових фото перед збереженням (заповнюється JS) #}
       <div id="new-previews" class="row g-2 mt-3 d-none justify-content-center"></div>
     </div>
 
-    <!-- Футер форми: активність та кнопка збереження -->
+    <!-- ===== ФУТЕР ФОРМИ ===== -->
     <div class="col-12 mt-5 p-3 bg-light d-flex flex-column align-items-start rounded">
       <div class="form-check form-switch mb-3">
         <input class="form-check-input" type="checkbox" name="is_active" id="active"
@@ -167,7 +192,7 @@
       {% with messages = get_flashed_messages() %}
         <button id="save-btn" type="submit"
                 class="btn {{ 'btn-primary' if messages else 'btn-success' }}">
-            {{ 'Оновлено' if messages else 'Зберегти все' }}
+          {{ 'Оновлено' if messages else 'Зберегти все' }}
         </button>
       {% endwith %}
     </div>
@@ -176,169 +201,7 @@
   </form>
 </div>
 
-<script>
+<!-- Підключаємо винесений JS (після DOM) -->
+<script src="{{ url_for('static', filename='js/admin/product_form.js') }}"></script>
 
-// Позначає форму як змінену — кнопка стає "Зберегти все"
-function markDirty() {
-  const saveBtn = document.getElementById("save-btn");
-  if (!saveBtn) return;
-  saveBtn.textContent = "Зберегти все";
-  saveBtn.classList.remove("btn-primary", "btn-danger");
-  saveBtn.classList.add("btn-success");
-}
-
-// Додає новий рядок кольору в форму
-function addColorRow() {
-  const container = document.getElementById("color-fields");
-  const index = container.querySelectorAll('.color-row').length;
-  const div = document.createElement("div");
-  div.className = "row g-2 mb-2 align-items-center color-row";
-  div.innerHTML = `
-    <input type="hidden" name="color_id[]" value="new">
-    <div class="col-4"><input name="color_name[]" class="form-control form-control-sm" placeholder="Назва"></div>
-    <div class="col-3"><input name="color_hex[]" type="color" class="form-control form-control-color w-100" value="#ffffff"></div>
-    <div class="col-3">
-      <div class="input-group input-group-sm">
-        <input type="number" min="0" max="100" name="color_modifier_${index}" class="form-control form-control-sm" value="0">
-        <span class="input-group-text">%</span>
-      </div>
-    </div>
-    <div class="col-2"><button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="this.closest('.color-row').remove()">×</button></div>
-  `;
-  container.appendChild(div);
-  markDirty();
-}
-
-// Видаляє колір або фото через API без перезавантаження сторінки
-async function apiDelete(type, id, btn) {
-  if (confirm('Видалити цей елемент?')) {
-    const url = type === 'color' ? `/admin/colors/${id}/delete` : `/admin/images/${id}/delete`;
-    const res = await fetch(url, { method: 'POST' });
-    if (res.ok) {
-      const row = btn.closest('.color-row, .image-row');
-      if (row) row.remove();
-      markDirty();
-    }
-  }
-}
-
-// Слухає зміни в формі і позначає її як змінену
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.querySelector("form");
-  form.addEventListener("input", markDirty);
-  form.addEventListener("change", markDirty);
-});
-
-// ===== DRAG & DROP =====
-
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
-const newPreviews = document.getElementById('new-previews');
-
-if (dropZone) {
-  // Підсвічування зони при перетягуванні
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.style.background = '#f0f4ff';
-    dropZone.style.borderColor = '#0d6efd';
-  });
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.style.background = '';
-    dropZone.style.borderColor = '#adb5bd';
-  });
-  // Обробка скинутих файлів
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.style.background = '';
-    dropZone.style.borderColor = '#adb5bd';
-    const dt = new DataTransfer();
-    [...e.dataTransfer.files].forEach(f => dt.items.add(f));
-    fileInput.files = dt.files;
-    showPreviews(fileInput.files);
-  });
-  // Обробка вибору через діалог
-  fileInput.addEventListener('change', () => showPreviews(fileInput.files));
-}
-
-// Показує прев'ю вибраних фото
-function showPreviews(files) {
-  newPreviews.innerHTML = '';
-  if (!files.length) return;
-  newPreviews.classList.remove('d-none');
-  [...files].forEach((file, i) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const col = document.createElement('div');
-      col.className = 'col-4 col-md-2';
-      col.innerHTML = `
-        <div class="position-relative">
-          <img src="${e.target.result}" class="img-thumbnail w-100"
-               style="height:80px;object-fit:cover;">
-          ${i === 0 ? '<span class="position-absolute top-0 start-0 m-1 badge text-bg-primary" style="font-size:9px;">Головне</span>' : ''}
-        </div>`;
-      newPreviews.appendChild(col);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// ===== СОРТУВАННЯ ІСНУЮЧИХ ФОТО =====
-
-const sortable = document.getElementById('image-sortable');
-let dragItem = null;
-
-if (sortable) {
-  sortable.querySelectorAll('.image-row').forEach(row => {
-    row.setAttribute('draggable', true);
-    // Початок перетягування
-    row.addEventListener('dragstart', () => {
-      dragItem = row;
-      setTimeout(() => row.style.opacity = '0.4', 0);
-    });
-    // Кінець перетягування — зберігаємо новий порядок
-    row.addEventListener('dragend', () => {
-      dragItem.style.opacity = '1';
-      dragItem = null;
-      updateSortOrder();
-      updateMainBadge();
-    });
-    // Переміщення елемента в новe місце
-    row.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      if (dragItem && dragItem !== row) {
-        const rect = row.getBoundingClientRect();
-        sortable.insertBefore(dragItem, e.clientX < rect.left + rect.width / 2 ? row : row.nextSibling);
-      }
-    });
-  });
-}
-
-// Оновлює бейдж "Головне" після зміни порядку
-function updateMainBadge() {
-  sortable.querySelectorAll('.image-row').forEach((row, i) => {
-    const wrap = row.querySelector('.position-relative');
-    const badge = row.querySelector('.badge.text-bg-primary');
-    if (i === 0 && !badge) {
-      const b = document.createElement('span');
-      b.className = 'position-absolute top-0 start-0 m-1 badge text-bg-primary';
-      b.style.fontSize = '10px';
-      b.textContent = 'Головне';
-      wrap.appendChild(b);
-    } else if (i !== 0 && badge) {
-      badge.remove();
-    }
-  });
-}
-
-// Відправляє новий порядок фото на сервер
-async function updateSortOrder() {
-  const ids = [...sortable.querySelectorAll('.image-row')].map(r => r.dataset.id);
-  await fetch('/admin/images/reorder', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ order: ids })
-  });
-}
-
-</script>
 {% endblock %}

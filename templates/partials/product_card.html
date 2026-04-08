@@ -2,61 +2,48 @@
 
 <div class="col-12 col-md-6 col-lg-4 mb-4">
   <div class="card h-100 shadow-sm">
+
+    {# Обкладинка товару (перше зображення або порожньо) #}
     {% set cover = product.images[0] if product.images else None %}
     {% if cover %}
       <img src="{{ get_image_url(cover.preview_filename or cover.filename) }}"
-           class="card-img-top img-fluid" alt="{{ product.name }}">
+           class="card-img-top img-fluid"
+           alt="{{ product.name }}"
+           style="object-fit: cover; aspect-ratio: 4/3;">
     {% endif %}
-    <div class="card-body">
+
+    {% set colors = product.colors_list
+        if product.colors_list is defined
+        else (product.colors | map(attribute='to_dict') | list) %}
+
+    <div class="card-body d-flex flex-column"
+         data-product-id="{{ product.id }}"
+         data-base-price="{{ product.price }}"
+         data-colors='{{ colors | tojson }}'>
       <h5 class="card-title">{{ product.name }}</h5>
-      <p class="card-text text-muted">
+      <p class="card-text text-muted flex-grow-1">
         {{ product.description[:100] }}{% if product.description and product.description|length > 100 %}...{% endif %}
       </p>
-      <div class="mb-2 pt-2 border-top price-display">Ціна від: {{ product.price|int }} грн.</div>
-      {% set colors = product.colors_list %}
-      {% include "partials/color_picker.html" %}
 
+      {# Базова ціна (оновлюється JS при виборі кольору) #}
+      <div class="mb-2 pt-2 border-top price-display">Ціна від: {{ product.price|int }} грн.</div>
+
+      {# colors вже визначено вище, передаємо у color_picker #}
+      {% include "partials/color_picker.html" %}
 
       <div class="d-flex justify-content-between align-items-center mt-3">
         <a href="{{ url_for('public.product_detail', product_id=product.id) }}"
            class="btn btn-sm btn-primary">Детальніше</a>
-        <button type="button" class="btn btn-sm btn-success"
-                onclick="addToCart_{{ product.id }}({{ product.id }})">Додати в кошик</button>
+        <button type="button"
+                class="btn btn-sm btn-success"
+                data-product-id="{{ product.id }}"
+                data-cart-url="{{ url_for('shop.cart_add') }}"
+                data-redirect-url="{{ url_for('shop.cart') }}"
+                onclick="addToCart(this)">
+          Додати в кошик
+        </button>
       </div>
     </div>
+
   </div>
 </div>
-
-<script>
-  function addToCart_{{ product.id }}(id) {
-  const selected = document.querySelector(`input[name="color-${id}"]:checked`);
-  const colorId = selected ? parseInt(selected.value) : null;
-
-  const payload = { product_id: id, quantity: 1, color_id: colorId };
-
-  fetch("/cart/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  }).then(res => {
-    if (res.ok) {
-      location.href = "/cart";
-    }
-  });
-}
-
-// Оновлення ціни при виборі кольору
-document.querySelectorAll('input[name="color-{{ product.id }}"]').forEach(el => {
-  el.addEventListener('change', () => {
-    const colorData = JSON.parse(
-      el.closest('[data-colors]').dataset.colors
-    );
-    const found = colorData.find(c => c.id == el.value);
-    const modifier = found ? (found.price_modifier || 0) : 0;
-    const base = {{ product.price|int }};
-    const price = Math.round(base * (1 + modifier/100));
-    // знаходимо елемент ціни в цій же картці
-    el.closest('.card-body').querySelector('.price-display').textContent = `Ціна: ${price} грн.`;
-  });
-});
-</script>

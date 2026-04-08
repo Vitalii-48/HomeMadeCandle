@@ -1,67 +1,76 @@
 <!-- templates/public/index.html -->
 {% extends "base.html" %}
 {% block content %}
+
+<!-- ===== HERO СЕКЦІЯ ===== -->
+<!-- Повноширинне зображення з текстом поверх (position: absolute) -->
 <section class="position-relative text-center hero my-5">
   <div class="container-hero position-relative p-5">
     <img src="{{ url_for('static', filename='img/hero-candle.jpg') }}"
          alt="Shaped Candle"
          class="img-fluid w-100 rounded shadow">
 
-    <!-- Текст поверх картинки -->
-    <div class="position-absolute top-50 start-50 translate-middle text-white">
-      <h1 class="display-3 fw-bold">Shaped Candle</h1>
-      <p class="lead mb-4">Нова колекція формових свічок</p>
-      <a href="{{ url_for('public.catalog') }}" class="btn btn-lg btn-warning fw-semibold">
+    <!-- Текст та CTA-кнопка поверх фото -->
+    <div class="position-absolute top-50 start-50 translate-middle text-white w-100 px-2">
+      <h1 class="fw-bold" style="font-size: clamp(1.2rem, 6vw, 3.5rem);">Shaped Candle</h1>
+      <p class="mb-2 mb-md-4" style="font-size: clamp(0.75rem, 3vw, 1.25rem);">Нова колекція формових свічок</p>
+      <a href="{{ url_for('public.catalog') }}" class="btn btn-warning fw-semibold"
+         style="font-size: clamp(0.75rem, 3vw, 1rem); padding: clamp(0.25rem, 1.5vw, 0.5rem) clamp(0.5rem, 3vw, 1.5rem);">
         Shop Now
       </a>
     </div>
   </div>
 </section>
 
+
+<!-- ===== СЕКЦІЯ: ПРО СВІЧКИ + КАРУСЕЛЬ ТОВАРІВ ===== -->
 <section class="container my-5">
   <div class="mb-4">
     <h2 class="display-5">Формові свічки — тепло і стиль</h2>
     <p>
-        Наші формові свічки створені з високоякісного воску та поєднують естетику й практичність.
-        Вони не лише дарують затишне світло, а й стають стильним акцентом у будь‑якому інтер’єрі.
-      </p>
-      <ul class="text-start mt-3">
-        <li>Оригінальні форми — від класичних до креативних дизайнерських рішень.</li>
-        <li>Великий вибір кольорів — підбери відтінок під настрій чи композицію.</li>
-        <li>Ручна робота — кожна свічка має свою унікальність.</li>
-        <li>Ідеальний подарунок — для дому, свят чи особливих моментів.</li>
-      </ul>
-      <p class="mt-3">
-        ✨ Обирай форму, комбінуй кольори та створюй власні композиції — подаруй тепло й атмосферу близьким.
-      </p>
+      Наші формові свічки створені з високоякісного воску та поєднують естетику й практичність.
+      Вони не лише дарують затишне світло, а й стають стильним акцентом у будь‑якому інтер'єрі.
+    </p>
+    <ul class="text-start mt-3">
+      <li>Оригінальні форми — від класичних до креативних дизайнерських рішень.</li>
+      <li>Великий вибір кольорів — підбери відтінок під настрій чи композицію.</li>
+      <li>Ручна робота — кожна свічка має свою унікальність.</li>
+      <li>Ідеальний подарунок — для дому, свят чи особливих моментів.</li>
+    </ul>
+    <p class="mt-3">
+      ✨ Обирай форму, комбінуй кольори та створюй власні композиції — подаруй тепло й атмосферу близьким.
+    </p>
 
-        <!-- Карусель свічок -->
-      {% if products %}
-      <div id="candlesCarousel" class="carousel slide mb-4 mx-auto" data-bs-ride="carousel">
-        <div class="carousel-inner">
-          {% for group in products|batch(3, fill_with=products[-1]) %}
-            <div class="carousel-item {% if loop.first %}active{% endif %}">
-              <div class="row flex-wrap g-2">
-                {% for c in group %}
-                  <div class="col-4">
-                    <div class="card h-100 shadow">
-                      {% if c.images %}
-                      <img src="{{ get_image_url(c.images[0].preview_filename or c.images[0].filename) }}"
-                          class="card-img-top img-fluid"
-                          alt="{{ c.name }}"
-                          style="object-fit: cover; aspect-ratio: 4/3; width: 100%;">
-                      {% endif %}
-                      <div class="card-body p-0">
-                        <h5 class="card-title text-center small mb-0">{{ c.name }}</h5>
-                      </div>
+    <!-- ===== КАРУСЕЛЬ ТОВАРІВ ===== -->
+    <!-- Групуємо товари по 3 на слайд. fill_with=products[-1] заповнює неповний останній слайд -->
+    {% if products %}
+    <div id="candlesCarousel" class="carousel slide mb-4 mx-auto" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        {% for group in products|batch(3, fill_with=products[-1]) %}
+          <div class="carousel-item {% if loop.first %}active{% endif %}">
+            <div class="row flex-wrap g-2">
+              {% for c in group %}
+                <div class="col-4">
+                  <div class="card h-100 shadow-sm">
+                    {% if c.images %}
+                    <!-- Прев'ю зображення товару (preview або повне) -->
+                    <img src="{{ get_image_url(c.images[0].preview_filename or c.images[0].filename) }}"
+                         class="card-img-top img-fluid"
+                         alt="{{ c.name }}"
+                         style="object-fit: cover; aspect-ratio: 4/3; width: 100%;">
+                    {% endif %}
+                    <div class="card-body p-1">
+                      <h5 class="card-title text-center small mb-0">{{ c.name }}</h5>
                     </div>
                   </div>
-                {% endfor %}
-              </div>
+                </div>
+              {% endfor %}
             </div>
+          </div>
         {% endfor %}
-        </div>
+      </div>
 
+      <!-- Стрілки навігації — показуємо лише якщо товарів більше 3 -->
       {% if products|length > 3 %}
       <button class="carousel-control-prev" type="button" data-bs-target="#candlesCarousel" data-bs-slide="prev">
         <span class="carousel-control-prev-icon"></span>
@@ -70,7 +79,7 @@
         <span class="carousel-control-next-icon"></span>
       </button>
       {% endif %}
-      </div>
+    </div>
     {% endif %}
 
     <div class="text-center mt-3">
@@ -79,16 +88,18 @@
   </div>
 </section>
 
+
+<!-- ===== СЕКЦІЯ: КОМПОЗИЦІЇ ===== -->
 <section class="container position-relative text-center my-5">
   <h2 class="display-5 mb-3">Композиції</h2>
   <p>
     Наші композиції зі свічок — це поєднання тепла, стилю та творчості.
-    Вони дозволяють об’єднувати різні форми й кольори у єдину атмосферну композицію,
+    Вони дозволяють об'єднувати різні форми й кольори у єдину атмосферну композицію,
     яка стане прикрасою дому чи особливим подарунком.
   </p>
   <ul class="text-start mt-3">
     <li>Унікальні поєднання — комбінуй свічки різних форм, щоб створити власний дизайн.</li>
-    <li>Гра кольорів — підбирай відтінки під настрій або інтер’єр.</li>
+    <li>Гра кольорів — підбирай відтінки під настрій або інтер'єр.</li>
     <li>Ручна робота — кожна композиція має свою неповторність.</li>
     <li>Ідеальний акцент — для свят, романтичних вечорів чи затишних моментів.</li>
   </ul>
@@ -96,6 +107,8 @@
     ✨ Створи власну композицію зі свічок — подаруй гармонію та атмосферу близьким.
   </p>
 
+  <!-- ===== КАРУСЕЛЬ КОМПОЗИЦІЙ ===== -->
+  <!-- Auto-play кожні 3 сек, пауза при hover -->
   {% if compositions %}
   <div id="compositionsCarousel"
        class="carousel slide"
@@ -108,7 +121,8 @@
           <div class="card h-100">
             {% if comp.image %}
               <img src="{{ get_image_url(comp.image) }}"
-                   class="card-img-top img-fluid" alt="{{ comp.title }}"
+                   class="card-img-top img-fluid"
+                   alt="{{ comp.title }}"
                    style="object-fit: cover; max-height: 400px;">
             {% endif %}
             <div class="card-body">
@@ -119,6 +133,7 @@
       {% endfor %}
     </div>
 
+    <!-- Стрілки навігації — показуємо лише якщо композицій більше 1 -->
     {% if compositions|length > 1 %}
     <button class="carousel-control-prev" type="button" data-bs-target="#compositionsCarousel" data-bs-slide="prev">
       <span class="carousel-control-prev-icon"></span>
@@ -137,6 +152,9 @@
   {% endif %}
 </section>
 
+
+<!-- ===== СЕКЦІЯ: ЧАСТІ ПИТАННЯ (превью) ===== -->
+<!-- faq_limit=3 — показуємо лише 3 питання; повний список на /faq -->
 <section class="container my-5">
   <h2 class="display-5 mb-4 text-center">Часті питання</h2>
   {% with faq_limit = 3 %}
@@ -149,17 +167,21 @@
   </div>
 </section>
 
+
+<!-- ===== ФУТЕР ===== -->
 <footer id="footer" class="bg-light text-dark py-5">
   <div class="container">
     <div class="row">
 
       <!-- Лого та короткий опис -->
       <div class="col-lg-3 col-sm-6 mb-4">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="mb-3 img-fluid w-50">
+        <img src="{{ url_for('static', filename='img/logo.png') }}"
+             alt="Logo"
+             class="mb-3 img-fluid w-50">
         <p>Handmade candles with love</p>
       </div>
 
-      <!-- Швидкі лінки -->
+      <!-- Швидкі посилання -->
       <div class="col-lg-3 col-sm-6 mb-4">
         <h5 class="fw-bold mb-3">Швидкі посилання</h5>
         <ul class="list-unstyled">
@@ -176,21 +198,21 @@
         <ul class="list-unstyled">
           <li><i class="bi bi-truck me-3"></i> Нова Пошта</li>
           <li><i class="bi bi-box-seam me-3"></i> Укрпошта</li>
-          <li><i class="bi bi-house-door me-3"></i> Кур’єр (Київ)</li>
+          <li><i class="bi bi-house-door me-3"></i> Кур'єр (Київ)</li>
         </ul>
       </div>
 
-      <!-- Соцмережі -->
+      <!-- Соціальні мережі -->
       <div class="col-lg-3 col-sm-6 mb-4">
         <h5 class="fw-bold mb-3">Слідкуйте за нами</h5>
         <div class="d-flex gap-3">
-          <a href="https://facebook.com" target="_blank" class="text-secondary">
+          <a href="https://facebook.com" target="_blank" rel="noopener" class="text-secondary">
             <i class="bi bi-facebook fs-4"></i>
           </a>
-          <a href="https://instagram.com" target="_blank" class="text-secondary">
+          <a href="https://instagram.com" target="_blank" rel="noopener" class="text-secondary">
             <i class="bi bi-instagram fs-4"></i>
           </a>
-          <a href="https://t.me" target="_blank" class="text-secondary">
+          <a href="https://t.me" target="_blank" rel="noopener" class="text-secondary">
             <i class="bi bi-telegram fs-4"></i>
           </a>
         </div>
@@ -198,6 +220,6 @@
 
     </div>
   </div>
-
 </footer>
+
 {% endblock %}
