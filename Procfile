@@ -1,2 +1,3 @@
 # Procfile
-web: gunicorn "app:create_app()"
+web: gunicorn --bind 0.0.0.0:$PORT "app:create_app()"
+
