@@ -88,7 +88,8 @@ def get_image_url(filename: str) -> str | None:
     """
     if not filename:
         return None
-    return _get_supabase().storage.from_(BUCKET).get_public_url(filename)
+    url = os.environ.get("SUPABASE_URL")
+    return f"{url}/storage/v1/object/public/{BUCKET}/{filename}"
 
 
 def delete_images(filenames: list[str]) -> None:
