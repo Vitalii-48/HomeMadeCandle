@@ -69,9 +69,7 @@ def _register_routes(app):
         return "OK", 200
 
 
-# Глобальна змінна `app` потрібна для Gunicorn (Procfile: gunicorn "app:create_app()")
-app = create_app()
-
 if __name__ == "__main__":
     # Локальний запуск для розробки. У продакшені використовується Gunicorn.
+    app = create_app()
     app.run(debug=True)
