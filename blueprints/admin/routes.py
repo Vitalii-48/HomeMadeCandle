@@ -5,7 +5,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, login_user, logout_user
 from werkzeug.security import check_password_hash
 from extensions import db
-from models import Product, Color, ProductImage, Order, User, Composition, CompositionImage, ColorPalette
+from models import Product, Color, ProductImage, Order, OrderItem, User, Composition, CompositionImage, ColorPalette
 from services.images import save_image, delete_images
 from . import bp
 
@@ -253,6 +253,20 @@ def image_delete(image_id):
 def product_delete(product_id):
     product = db.get_or_404(Product, product_id)
 
+    # Знаходимо всі кольори цього продукту
+    colors = db.session.scalars(
+        select(Color).where(Color.product_id == product.id)
+    ).all()
+    color_ids = [c.id for c in colors]
+
+    # Обнуляємо color_id в замовленнях які містять ці кольори
+    if color_ids:
+        db.session.execute(
+            OrderItem.__table__.update()
+            .where(OrderItem.color_id.in_(color_ids))
+            .values(color_id=None)
+        )
+
     # Видаляємо файли зображень з диску, потім записи з БД
     images = db.session.scalars(
         select(ProductImage).where(ProductImage.product_id == product.id)
@@ -262,9 +276,9 @@ def product_delete(product_id):
         db.session.delete(img)
 
     # Видаляємо кольори товару
-    db.session.execute(
-        Color.__table__.delete().where(Color.product_id == product.id)
-    )
+    for color in colors:  # colors вже є зверху
+        db.session.delete(color)
+
     db.session.delete(product)
     db.session.commit()
     flash("Продукт успішно видалено!")
