@@ -1,49 +1,49 @@
-# HomeMadeCandle — Інтернет-магазин формових свічок
+# HomeMadeCandle — Online Candle Shop
 
-Веб-додаток на Flask: публічний сайт + адмін-панель.  
-Bootstrap-адаптивність, кошик у сесії, зображення у Supabase Storage, OTP-верифікація телефону, сповіщення у Telegram.
+A Flask web application: public storefront + admin panel.
+Bootstrap-responsive design, session-based cart, images stored in Supabase Storage, phone OTP verification, and Telegram notifications.
 
 ---
 
-## Технології
+## Tech Stack
 
 - **Backend:** Python 3.12+, Flask 3, SQLAlchemy 2, Flask-Migrate (Alembic)
-- **БД:** PostgreSQL (через psycopg2)
-- **Зображення:** Supabase Storage + Pillow (прев'ю 200×200)
-- **Аутентифікація:** Flask-Login (адмінка)
-- **Доставка:** Нова Пошта API v2 (+ fake-заглушка для розробки)
-- **Сповіщення:** Telegram Bot API
+- **Database:** PostgreSQL (via psycopg2)
+- **Images:** Supabase Storage + Pillow (200×200 previews)
+- **Authentication:** Flask-Login (admin panel)
+- **Delivery:** Nova Poshta API v2 (+ fake stub for development)
+- **Notifications:** Telegram Bot API
 
 ---
 
-## Структура проєкту
+## Project Structure
 
 ```
 ├── app.py                    # Application factory (create_app)
-├── config.py                 # Конфігурація зі змінних середовища
+├── config.py                 # Configuration from environment variables
 ├── extensions.py             # db, migrate, login_manager
-├── models.py                 # ORM-моделі (Product, Order, Composition …)
+├── models.py                 # ORM models (Product, Order, Composition …)
 ├── requirements.txt
-├── Procfile                  # Gunicorn для Heroku/Render
-├── .env                      # Локальні змінні (не комітити!)
+├── Procfile                  # Gunicorn for Heroku/Render
+├── .env                      # Local variables (do not commit!)
 ├── .gitignore
 │
 ├── blueprints/
-│   ├── public/               # Головна, каталог, картка товару, FAQ
-│   ├── shop/                 # Кошик, оформлення замовлення, OTP, НП
-│   └── admin/                # Логін, товари, замовлення, композиції, палітра
+│   ├── public/               # Home, catalog, product detail, FAQ
+│   ├── shop/                 # Cart, checkout, OTP, Nova Poshta
+│   └── admin/                # Login, products, orders, compositions, palette
 │
 ├── services/
-│   ├── cart.py               # Сесійний кошик
+│   ├── cart.py               # Session-based cart
 │   ├── images.py             # Supabase Storage: upload + preview
-│   ├── otp.py                # OTP-верифікація телефону
-│   ├── telegram.py           # Сповіщення про нові замовлення
+│   ├── otp.py                # Phone OTP verification
+│   ├── telegram.py           # New order notifications
 │   └── nova_poshta/
-│       ├── __init__.py       # Перемикач fake ↔ real
-│       ├── fake.py           # Заглушка для локальної розробки
-│       └── real.py           # Реальний API Нової Пошти
+│       ├── init.py           # fake ↔ real switcher
+│       ├── fake.py           # Stub for local development
+│       └── real.py           # Real Nova Poshta API
 │
-├── templates/                # Jinja2-шаблони (Bootstrap 5)
+├── templates/                # Jinja2 templates (Bootstrap 5)
 │   ├── base.html
 │   ├── partials/             # header, footer, color_picker, faq_items, product_card
 │   ├── public/               # index, catalog, product_detail, compositions, faq, privacy
@@ -51,18 +51,18 @@ Bootstrap-адаптивність, кошик у сесії, зображенн
 │   └── admin/                # login, index, product_form, product_list,
 │                             # composition_form, composition_list, order_list, palette
 └── static/
-    ├── css/
-    ├── js/
-    │   ├── admin/product_form.js
-    │   └── public/product_detail.js
-    └── img/
+├── css/
+├── js/
+│   ├── admin/product_form.js
+│   └── public/product_detail.js
+└── img/
 ```
 
 ---
 
-## Локальний запуск
+## Local Setup
 
-### 1. Клонувати та створити середовище
+### 1. Clone and create environment
 
 ```bash
 git clone <repo-url>
@@ -70,15 +70,15 @@ cd HomeMadeCandle
 
 python -m venv .venv
 .venv\Scripts\activate       # Windows
-# або
+# or
 source .venv/bin/activate    # macOS / Linux
 
 pip install -r requirements.txt
 ```
 
-### 2. Налаштувати `.env`
+### 2. Configure `.env`
 
-Створи файл `.env` у корені проєкту:
+Create a `.env` file in the project root:
 
 ```env
 HMC_SECRET_KEY=your-secret-key-here
@@ -90,19 +90,19 @@ SUPABASE_KEY=your-supabase-anon-key
 TELEGRAM_BOT_TOKEN=123456:ABC-your-token
 TELEGRAM_CHAT_ID=123456789
 
-# Опціонально (для продакшен-доставки через НП)
+# Optional (for production delivery via Nova Poshta)
 NOVA_POSHTA_API_KEY=your-np-api-key
 ```
 
-### 3. Ініціалізувати БД
+### 3. Initialize the database
 
 ```bash
-flask db init          # лише перший раз — створює папку migrations/
+flask db init          # first time only — creates migrations/ folder
 flask db migrate -m "init"
 flask db upgrade
 ```
 
-### 4. Створити адміністратора
+### 4. Create an admin user
 
 ```bash
 flask shell
@@ -117,60 +117,59 @@ db.session.add(u)
 db.session.commit()
 ```
 
-### 5. Запустити
+### 5. Run
 
 ```bash
 flask run
 ```
 
-Сайт: http://localhost:5000  
-Адмінка: http://localhost:5000/admin
+Site: http://localhost:5000  
+Admin panel: http://localhost:5000/admin
 
 ---
 
+## Features
 
-## Основні можливості
-
-- Каталог товарів із слайдером фото та вибором кольору
-- Прев'ю-зображення 200×200 (генеруються автоматично через Pillow)
-- Кошик із редагуванням кількості (без перезавантаження сторінки)
-- Оформлення замовлення з OTP-верифікацією телефону
-- Вибір доставки: Нова Пошта (місто + відділення) або самовивіз
-- Telegram-сповіщення адміну при новому замовленні
-- Адмінка: CRUD товарів, кольорів, фото, композицій, замовлень
-- Глобальна палітра кольорів (копіюється на новий товар автоматично)
-- Drag & drop сортування фото товарів
+- Product catalog with photo slider and color selection
+- Auto-generated 200×200 image previews via Pillow
+- Cart with quantity editing (no page reload)
+- Checkout with phone OTP verification
+- Delivery options: Nova Poshta (city + branch) or pickup
+- Telegram notification to admin on new order
+- Admin panel: full CRUD for products, colors, photos, compositions, orders
+- Global color palette (automatically copied to new products)
+- Drag & drop photo sorting for products
 
 ---
 
-## Перехід на реальний API Нової Пошти
+## Switching to Real Nova Poshta API
 
-У `services/nova_poshta/__init__.py`:
+In `services/nova_poshta/__init__.py`:
 ```python
-# замінити:
+# replace:
 from .fake import search_cities, get_warehouses
-# на:
+# with:
 from .real import search_cities, get_warehouses
 ```
-Та додати `NOVA_POSHTA_API_KEY` у `.env`.
+And add `NOVA_POSHTA_API_KEY` to your `.env`.
 
 ---
 
-## Динамічний рік у футері
+## Dynamic Year in Footer
 
-У `app.py` (`_register_jinja_globals`) додай:
+In `app.py` (`_register_jinja_globals`) add:
 ```python
 from datetime import datetime
 app.jinja_env.globals["now"] = datetime.now
 ```
-Тоді у `footer.html` працює `{{ now().year }}` замість захардкодженого року.
+Then in `footer.html` use `{{ now().year }}` instead of a hardcoded year.
 
 ---
 
-## Примітки
+## Notes
 
-- Міграції — після кожної зміни `models.py`: `flask db migrate -m "опис"` → `flask db upgrade`
-- При `joinedload` на колекції завжди використовуй `.unique().all()` (вимога SQLAlchemy 2.x)
-- Не імпортуй `app` у `models.py` — лише `db` з `extensions.py` (уникнення циклічних імпортів)
-- Зображення зберігаються у Supabase Storage (bucket `images_candles`)
-- `.env` — ніколи не комітити у git
+- Run migrations after every `models.py` change: `flask db migrate -m "description"` → `flask db upgrade`
+- When using `joinedload` on collections, always call `.unique().all()` (SQLAlchemy 2.x requirement)
+- Never import `app` in `models.py` — only import `db` from `extensions.py` (avoids circular imports)
+- Images are stored in Supabase Storage (bucket `images_candles`)
+- Never commit `.env` to git
