@@ -111,15 +111,15 @@ def cart_add():
         qty      = max(1, int(data.get("quantity", 1)))
         price    = price_with_color(product, color)
         CartService.add_product(product.id, color.id if color else None, qty, price)
-        return jsonify({"ok": True})
+        return jsonify({"ok": True, "cart_count": CartService.count()})
 
     if composition_id:
         composition = db.get_or_404(Composition, composition_id)
         qty         = max(1, int(data.get("quantity", 1)))
         CartService.add_composition(composition_id, qty, composition.price)
-        return jsonify({"ok": True})
+        return jsonify({"ok": True, "cart_count": CartService.count()})
 
-    return jsonify({"ok": False, "error": "no item"})
+    return jsonify({"ok": False, "error": "no item", "cart_count": CartService.count()})
 
 
 # ─────────────────────────────────────────────

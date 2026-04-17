@@ -9,6 +9,12 @@
       <a class="btn btn-outline-secondary btn-sm ms-auto me-2 d-md-none position-relative"
          href="{{ url_for('shop.cart') }}">
         🛒
+        <!-- 🔴 Бейдж кількості -->
+        <span id="cart-count-badge"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+          style="font-size: 0.65rem;">
+          {{ cart_count or 0 }}
+        </span>
       </a>
 
       <button class="navbar-toggler" type="button"

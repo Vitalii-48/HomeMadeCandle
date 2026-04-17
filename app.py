@@ -10,6 +10,7 @@ from blueprints.public import bp as public_bp
 from blueprints.shop import bp as shop_bp
 from blueprints.admin import bp as admin_bp
 from services.images import get_image_url
+from services.cart import CartService
 
 
 def create_app(config_class=Config):
@@ -55,6 +56,13 @@ def _register_jinja_globals(app):
     """Реєстрація глобальних функцій/змінних, доступних у всіх Jinja2-шаблонах."""
     app.jinja_env.globals["get_image_url"] = get_image_url
     app.jinja_env.globals["now"] = datetime.now
+
+    # 🛒 КІЛЬКІСТЬ ТОВАРІВ У КОШИКУ
+    @app.context_processor
+    def inject_cart_count():
+        return {
+            "cart_count": CartService.count()
+        }
 
 def _register_routes(app):
     """Реєстрація службових маршрутів застосунку."""

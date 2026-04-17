@@ -31,7 +31,8 @@
               <p class="card-price mb-0 fw-bold">{{ comp.price }} грн</p>
               <button type="button"
                       class="btn btn-sm btn-success"
-                      onclick="addComposition({{ comp.id }})">
+                      data-cart-url="{{ url_for('shop.cart_add') }}"
+                      onclick="addComposition(this.dataset.cartUrl, {{ comp.id }})">
                 Додати до кошика
               </button>
             </div>
@@ -52,20 +53,6 @@
 
 </div>
 
-<script>
-  // Додавання композиції до кошика через API
-  function addComposition(id) {
-    fetch("{{ url_for('shop.cart_add') }}", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ composition_id: id, quantity: 1 })
-    }).then(res => {
-      if (res.ok) {
-        // Перехід до кошика після успішного додавання
-        location.href = "{{ url_for('shop.cart') }}";
-      }
-    });
-  }
-</script>
+<script src="{{ url_for('static', filename='js/public/compositions.js') }}"></script>
 
 {% endblock %}
