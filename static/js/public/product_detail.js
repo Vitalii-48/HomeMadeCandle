@@ -2,10 +2,28 @@
 
 // Оновлення всіх бейджів кошика на сторінці
 function updateCartBadges(count) {
-  const badge = document.getElementById("cart-count-badge");
-  if (badge) {
-    badge.textContent = count;
+  const cartLink = document.querySelector('a[href$="/cart"].d-md-none');
+  if (!cartLink) {
+    return;
   }
+
+  let badge = document.getElementById("cart-count-badge");
+  if (Number(count) <= 0) {
+    if (badge) {
+      badge.remove();
+    }
+    return;
+  }
+
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.id = "cart-count-badge";
+    badge.className = "position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger";
+    badge.style.fontSize = "0.65rem";
+    cartLink.appendChild(badge);
+  }
+
+  badge.textContent = count;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

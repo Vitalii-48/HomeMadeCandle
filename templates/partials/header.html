@@ -10,11 +10,13 @@
          href="{{ url_for('shop.cart') }}">
         🛒
         <!-- 🔴 Бейдж кількості -->
+        {% if cart_count %}
         <span id="cart-count-badge"
           class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
           style="font-size: 0.65rem;">
-          {{ cart_count or 0 }}
+          {{ cart_count }}
         </span>
+        {% endif %}
       </a>
 
       <button class="navbar-toggler" type="button"
