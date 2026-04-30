@@ -15,6 +15,7 @@ The goal is not full coverage, but verification of the main scenarios after code
 - `tests/test_public_routes.py` — basic checks of pages and healthcheck  
 - `tests/test_cart.py` — adding, updating, and removing items in the cart  
 - `tests/test_checkout.py` — simple checkout scenarios  
+- `tests/test_admin.py` — login and access checks for the admin panel  
 
 ## Currently Covered
 
@@ -27,11 +28,14 @@ The goal is not full coverage, but verification of the main scenarios after code
 - creating an order from a product  
 - creating an order from a composition  
 - redirect to the cart if checkout is called with an empty cart  
+- opening the admin login page  
+- redirect to login for anonymous users on protected admin pages  
+- successful and unsuccessful admin login  
+- opening main admin sections after login  
 
 ## Not Yet Covered
 
 - full phone validation check  
-- administrator authorization  
 - uploading images to Supabase  
 - actual sending of messages to Telegram  
 - integration with Nova Poshta API  

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy.pool import StaticPool
+from werkzeug.security import generate_password_hash
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -10,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app import create_app
 from extensions import db
-from models import Color, Composition, Product
+from models import Color, Composition, Product, User
 
 
 @pytest.fixture
@@ -76,3 +77,16 @@ def sample_data(app):
             "color_id": color.id,
             "composition_id": composition.id,
         }
+
+
+@pytest.fixture
+def admin_user(app):
+    with app.app_context():
+        user = User(
+            email="admin@example.com",
+            password_hash=generate_password_hash("secret123"),
+            is_active=True,
+        )
+        db.session.add(user)
+        db.session.commit()
+        return user
